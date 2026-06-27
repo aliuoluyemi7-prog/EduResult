@@ -1,0 +1,2172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>EduResult — Wellspring Academy</title>
+
+<!-- PWA meta — safe for local file use -->
+<meta name="theme-color" content="#1e40af">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="EduResult">
+<script>
+  // Only inject manifest when served over http/https — avoids SW scope error on file://
+  if (location.protocol !== "file:") {
+    var lnk = document.createElement("link");
+    lnk.rel = "manifest"; lnk.href = "manifest.json";
+    document.head.appendChild(lnk);
+    var ico = document.createElement("link");
+    ico.rel = "apple-touch-icon"; ico.href = "icon-192.png";
+    document.head.appendChild(ico);
+  }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===================== RESET & BASE ===================== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --blue: #1e40af;
+  --blue-dark: #1e3a8a;
+  --blue-light: #eff6ff;
+  --blue-mid: #3b82f6;
+  --green: #065f46;
+  --green-light: #d1fae5;
+  --red: #991b1b;
+  --red-light: #fee2e2;
+  --amber: #92400e;
+  --amber-light: #fef3c7;
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-400: #94a3b8;
+  --gray-600: #475569;
+  --gray-800: #1e293b;
+  --white: #ffffff;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.05);
+  --shadow: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--gray-100);
+  color: var(--gray-800);
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===================== TOPBAR ===================== */
+.topbar {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #1e40af 100%);
+  color: white;
+  padding: 0 20px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 2px 20px rgba(15,23,42,0.4);
+}
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.topbar-brand .logo {
+  width: 34px; height: 34px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.topbar-brand h1 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+}
+.topbar-brand h1 span { opacity: 0.65; font-size: 13px; display: block; font-family: var(--font-body); font-weight: 400; margin-top: -2px; }
+.topbar-actions { display: flex; gap: 8px; }
+
+/* ===================== NAV TABS ===================== */
+.nav-tabs {
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0 16px;
+  position: sticky;
+  top: 56px;
+  z-index: 40;
+  box-shadow: var(--shadow-sm);
+}
+.nav-tabs::-webkit-scrollbar { display: none; }
+.nav-tab {
+  padding: 14px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-400);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+  transition: all 0.2s;
+  display: flex; align-items: center; gap: 6px;
+  user-select: none;
+}
+.nav-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+.nav-tab:hover:not(.active) { color: var(--gray-600); }
+.nav-tab .badge {
+  background: var(--blue-light);
+  color: var(--blue);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* ===================== MAIN ===================== */
+.main { max-width: 960px; margin: 0 auto; padding: 20px 16px 100px; }
+
+/* ===================== PANELS ===================== */
+.panel { display: none; animation: fadeUp 0.25s ease; }
+.panel.active { display: block; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===================== CARDS ===================== */
+.card {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-200);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.card-header {
+  padding: 16px 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.card-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  color: var(--gray-800);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-title .icon {
+  width: 32px; height: 32px;
+  background: var(--blue-light);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+}
+.card-body { padding: 16px 20px 20px; }
+
+/* ===================== FORM ===================== */
+.form-group { margin-bottom: 14px; }
+.form-group:last-child { margin-bottom: 0; }
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-600);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+input[type="text"], input[type="number"], select, textarea {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: var(--font-body);
+  color: var(--gray-800);
+  background: white;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(30,64,175,0.1);
+}
+input[type="number"] { text-align: center; font-weight: 600; }
+input.error { border-color: var(--red); box-shadow: 0 0 0 3px rgba(200,30,30,0.1); }
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+/* ===================== BUTTONS ===================== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--blue); color: white; }
+.btn-primary:hover { background: var(--blue-dark); }
+.btn-success { background: var(--green); color: white; }
+.btn-success:hover { filter: brightness(1.1); }
+.btn-danger { background: var(--red); color: white; }
+.btn-danger:hover { filter: brightness(1.1); }
+.btn-outline { background: white; color: var(--blue); border: 1.5px solid var(--blue); }
+.btn-outline:hover { background: var(--blue-light); }
+.btn-ghost { background: var(--gray-100); color: var(--gray-600); }
+.btn-ghost:hover { background: var(--gray-200); }
+.btn-amber { background: #d97706; color: white; }
+.btn-sm { padding: 7px 13px; font-size: 12.5px; }
+.btn-icon { width: 34px; height: 34px; padding: 0; border-radius: 8px; }
+.btn-full { width: 100%; }
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ===================== TABLE ===================== */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -20px; padding: 0 20px; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  min-width: 600px;
+}
+thead tr { background: var(--gray-50); border-bottom: 2px solid var(--gray-200); }
+th {
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--gray-600);
+  white-space: nowrap;
+}
+th.center, td.center { text-align: center; }
+td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--gray-100);
+  vertical-align: middle;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--gray-50); }
+tbody tr { transition: background 0.1s; }
+
+/* Score inputs inside table */
+.score-input {
+  width: 64px;
+  padding: 7px 4px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 6px;
+}
+
+/* ===================== GRADE BADGES ===================== */
+.grade {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 26px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.grade-A { background: #d1fae5; color: #065f46; }
+.grade-B { background: #dbeafe; color: #1e40af; }
+.grade-C { background: #fef3c7; color: #92400e; }
+.grade-D { background: #ffedd5; color: #9a3412; }
+.grade-E { background: #fee2e2; color: #991b1b; }
+.grade-F { background: #fca5a5; color: #7f1d1d; }
+
+/* ===================== TOTAL BADGE ===================== */
+.total-score {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--gray-800);
+}
+.total-score.high { color: var(--green); }
+.total-score.mid { color: var(--amber); }
+.total-score.low { color: var(--red); }
+
+/* ===================== STATS STRIP ===================== */
+.stats-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.stat-box {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+.stat-box .value {
+  font-family: var(--font-display);
+  font-size: 26px;
+  color: var(--blue);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-box .label { font-size: 11px; color: var(--gray-400); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ===================== SUBJECT CHIPS ===================== */
+.subject-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.subject-chip {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--blue-light);
+  color: var(--blue);
+  padding: 5px 10px 5px 12px;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.subject-chip button {
+  background: none; border: none; color: var(--blue); cursor: pointer;
+  font-size: 14px; padding: 0; line-height: 1; opacity: 0.7;
+}
+.subject-chip button:hover { opacity: 1; }
+
+/* ===================== TOAST ===================== */
+.toast-container {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  z-index: 999; display: flex; flex-direction: column; gap: 8px; align-items: center;
+  pointer-events: none;
+}
+.toast {
+  background: var(--gray-800); color: white;
+  padding: 10px 20px; border-radius: 24px;
+  font-size: 13px; font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  opacity: 0; transform: translateY(16px);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex; align-items: center; gap: 8px;
+  max-width: 90vw; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.toast.success { background: var(--green); }
+.toast.error { background: var(--red); }
+.toast.info { background: var(--blue); }
+
+/* ===================== EMPTY STATE ===================== */
+.empty-state {
+  text-align: center; padding: 48px 24px;
+  color: var(--gray-400);
+}
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+.empty-state p { font-size: 14px; margin-bottom: 16px; }
+
+/* ===================== SUBJECT SETUP ===================== */
+.add-subject-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.add-subject-row input { flex: 1; }
+
+/* ===================== REPORT CARD MODAL ===================== */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6); z-index: 100;
+  align-items: flex-start; justify-content: center;
+  padding: 20px; overflow-y: auto;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: white; border-radius: var(--radius-lg);
+  width: 100%; max-width: 760px;
+  box-shadow: var(--shadow-lg);
+  animation: modalIn 0.25s ease;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--gray-200);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-title { font-family: var(--font-display); font-size: 18px; }
+.modal-body { padding: 24px; }
+
+/* ===================== REPORT CARD PRINT ===================== */
+.rc-select-row {
+  display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.rc-select-row .form-group { margin-bottom: 0; flex: 1; min-width: 160px; }
+
+/* ===================== POSITION BADGE ===================== */
+.pos-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #fef3c7; color: #92400e;
+  padding: 3px 8px; border-radius: 10px;
+  font-size: 11px; font-weight: 700;
+}
+
+/* ===================== PROGRESS BAR ===================== */
+.progress-bar { background: var(--gray-200); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--blue); border-radius: 4px; transition: width 0.4s; }
+
+/* ===================== STUDENT DRAWER ===================== */
+.drawer-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55); z-index: 200;
+  align-items: flex-end; justify-content: center;
+}
+.drawer-overlay.open { display: flex; }
+.drawer {
+  background: white;
+  border-radius: 20px 20px 0 0;
+  width: 100%; max-width: 680px;
+  max-height: 92vh;
+  overflow-y: auto;
+  animation: drawerUp 0.28s cubic-bezier(0.34, 1.2, 0.64, 1);
+  -webkit-overflow-scrolling: touch;
+}
+@keyframes drawerUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.drawer-handle {
+  width: 40px; height: 4px;
+  background: var(--gray-300);
+  border-radius: 2px;
+  margin: 12px auto 0;
+}
+.drawer-header {
+  padding: 14px 20px 12px;
+  border-bottom: 1px solid var(--gray-100);
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; background: white; z-index: 10;
+}
+.drawer-title {
+  font-family: var(--font-display);
+  font-size: 18px; color: var(--blue);
+}
+.drawer-body { padding: 16px 20px 32px; }
+
+/* ===================== DRAWER SECTIONS ===================== */
+.drawer-section {
+  margin-bottom: 20px;
+}
+.drawer-section-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.9px; color: var(--gray-400);
+  padding-bottom: 7px; border-bottom: 1.5px solid var(--gray-200);
+  margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+}
+.score-entry-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+.score-entry-row {
+  display: grid;
+  grid-template-columns: 1fr 72px 72px 56px 44px;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  background: var(--gray-50);
+  border-radius: 8px;
+  border: 1px solid var(--gray-200);
+}
+.score-entry-row:focus-within {
+  border-color: var(--blue);
+  background: var(--blue-light);
+}
+.score-subj-name {
+  font-size: 12.5px; font-weight: 600; color: var(--gray-800);
+  line-height: 1.3;
+}
+.score-col-input {
+  text-align: center; font-weight: 700; font-size: 15px;
+  padding: 7px 4px; border-radius: 6px;
+}
+.score-entry-headers {
+  display: grid;
+  grid-template-columns: 1fr 72px 72px 56px 44px;
+  gap: 8px;
+  padding: 0 10px 6px;
+}
+.score-entry-headers span {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--gray-400); text-align: center;
+}
+.score-entry-headers span:first-child { text-align: left; }
+.score-total-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 48px; height: 28px;
+  border-radius: 6px;
+  font-size: 13px; font-weight: 700;
+  background: var(--gray-100); color: var(--gray-600);
+}
+.score-total-badge.high { background: #d1fae5; color: #065f46; }
+.score-total-badge.mid { background: #fef3c7; color: #92400e; }
+.score-total-badge.low { background: #fee2e2; color: #991b1b; }
+
+/* ===================== RATING SELECT ===================== */
+.rating-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.rating-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 10px;
+  background: var(--gray-50);
+  border-radius: 7px;
+  border: 1px solid var(--gray-200);
+  gap: 8px;
+}
+.rating-item label {
+  font-size: 12px; font-weight: 600; color: var(--gray-700);
+  text-transform: none; letter-spacing: 0; margin: 0; flex: 1;
+}
+.rating-select {
+  width: 88px !important;
+  padding: 5px 6px !important;
+  font-size: 11.5px !important;
+  border-radius: 5px !important;
+  flex-shrink: 0;
+}
+
+/* ===================== COMMENT TEXTAREA ===================== */
+.comment-area {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-family: var(--font-body);
+  color: var(--gray-800);
+  resize: vertical;
+  min-height: 60px;
+  transition: border-color 0.15s;
+}
+.comment-area:focus { outline: none; border-color: var(--blue); }
+
+/* Tap to open scores button in student rows */
+.open-drawer-btn {
+  background: var(--blue-light);
+  color: var(--blue);
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: background 0.15s;
+}
+.open-drawer-btn:active { background: #c4d7fa; }
+.score-completion-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  display: inline-block; margin-right: 4px;
+}
+.dot-full { background: var(--green); }
+.dot-partial { background: var(--amber); }
+.dot-empty { background: var(--gray-300); }
+
+/* ===================== SECTION LABEL ===================== */
+.section-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
+  color: var(--gray-400); margin-bottom: 10px; padding-bottom: 6px;
+  border-bottom: 1px solid var(--gray-200);
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* ===================== DIVIDER ===================== */
+.divider { border: none; border-top: 1px solid var(--gray-200); margin: 16px 0; }
+
+/* ===================== IMAGE UPLOAD WIDGETS ===================== */
+.img-upload-box {
+  border: 2px dashed var(--gray-300);
+  border-radius: var(--radius);
+  padding: 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  background: var(--gray-50);
+  min-height: 90px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.img-upload-box:hover { border-color: var(--blue); background: var(--blue-light); }
+.img-upload-box input[type="file"] {
+  position: absolute; inset: 0;
+  opacity: 0; cursor: pointer;
+  width: 100%; height: 100%;
+}
+.img-upload-box .upload-label {
+  font-size: 12px; font-weight: 600; color: var(--gray-600);
+}
+.img-upload-box .upload-hint {
+  font-size: 11px; color: var(--gray-400);
+}
+.img-preview {
+  width: 100%; max-height: 80px;
+  object-fit: contain;
+  border-radius: 6px;
+  display: none;
+}
+.img-preview.loaded { display: block; }
+.img-upload-emoji { font-size: 28px; line-height: 1; }
+.img-clear-btn {
+  position: absolute; top: 6px; right: 8px;
+  background: var(--red); color: white;
+  border: none; border-radius: 50%;
+  width: 22px; height: 22px;
+  font-size: 12px; cursor: pointer;
+  display: none; align-items: center; justify-content: center;
+  font-weight: 700; line-height: 1;
+  z-index: 2;
+}
+.img-clear-btn.visible { display: flex; }
+
+/* ===================== REPORT CARD LOGO/STAMP/SIG ===================== */
+.rc-logo-img {
+  width: 56px; height: 56px;
+  object-fit: contain;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.rc-stamp-wrap {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  padding: 8px 14px 8px 0;
+}
+.rc-stamp-img {
+  width: 80px; height: 80px;
+  object-fit: contain;
+  opacity: 0.75;
+}
+.rc-headmaster-sig {
+  display: block;
+  max-width: 140px;
+  max-height: 52px;
+  object-fit: contain;
+  margin-bottom: 4px;
+}
+
+/* ===================== PRINT STYLES ===================== */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 10mm 12mm;
+  }
+
+  .topbar, .nav-tabs, .no-print, .toast-container,
+  .drawer-overlay, #installBanner { display: none !important; }
+
+  body { background: white !important; margin: 0 !important; padding: 0 !important; }
+
+  .report-card {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin-bottom: 0;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  .report-card + .report-card {
+    page-break-before: always;
+    break-before: always;
+    margin-top: 0;
+  }
+}
+
+/* ===================== REPORT CARD LAYOUT ===================== */
+.report-card {
+  font-family: 'DM Sans', Arial, sans-serif;
+  font-size: 10.5px;
+  color: #1e293b;
+  border: 1.5px solid #1e40af;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  max-width: 210mm;
+  box-sizing: border-box;
+}
+
+.rc-top-banner {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #1e40af 100%);
+  color: white;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.rc-school-crest {
+  width: 44px; height: 44px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+}
+.rc-school-info h2 {
+  font-size: 14px; font-weight: 700; margin-bottom: 1px;
+  letter-spacing: 0.5px; text-transform: uppercase;
+}
+.rc-school-info p { font-size: 10.5px; opacity: 0.85; }
+.rc-doc-title {
+  background: #f0f4ff;
+  text-align: center;
+  padding: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #1e40af;
+  border-bottom: 1px solid #dbeafe;
+}
+
+.rc-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+  border-bottom: 1.5px solid #dbeafe;
+}
+.rc-info-cell {
+  padding: 5px 10px;
+  border-right: 1px solid #dbeafe;
+  font-size: 11px;
+}
+.rc-info-cell:last-child { border-right: none; }
+.rc-info-cell .info-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; margin-bottom: 2px; }
+.rc-info-cell .info-value { font-weight: 600; color: #1e293b; font-size: 12px; }
+
+.rc-table-wrap { padding: 12px 14px 0; }
+.rc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  margin-bottom: 12px;
+}
+.rc-table thead tr { background: #1e293b; color: white; }
+.rc-table thead th { padding: 5px 8px; text-align: center; font-size: 10px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; }
+.rc-table thead th:first-child { text-align: left; }
+.rc-table tbody td { padding: 4px 8px; border-bottom: 1px solid #f1f5f9; text-align: center; }
+.rc-table tbody td:first-child { text-align: left; font-weight: 600; }
+.rc-table tbody tr:nth-child(even) td { background: #f8fafc; }
+.rc-table tfoot tr { background: #eff6ff; font-weight: 700; }
+.rc-table tfoot td { padding: 5px 8px; border-top: 2px solid #1e40af; text-align: center; }
+.rc-table tfoot td:first-child { text-align: left; }
+
+.rc-grade-key {
+  margin: 0 10px 8px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 10px;
+  color: #6b7280;
+  line-height: 1.6;
+}
+.rc-grade-key strong { color: #1e40af; }
+
+.rc-bottom-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border-top: 1.5px solid #dbeafe;
+  margin: 0;
+}
+.rc-bottom-col {
+  padding: 7px 10px;
+  border-right: 1px solid #dbeafe;
+}
+.rc-bottom-col:last-child { border-right: none; }
+.rc-bottom-title {
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.8px; color: #1e40af; margin-bottom: 6px;
+  padding-bottom: 4px; border-bottom: 1px solid #dbeafe;
+}
+.trait-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 2px 0; border-bottom: 1px dotted #e5e7eb; font-size: 10.5px;
+}
+.trait-rating {
+  font-weight: 700; color: #1e40af; font-size: 11px;
+}
+
+.rc-summary-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: #eff6ff;
+  border-top: 1.5px solid #dbeafe;
+  border-bottom: 1.5px solid #dbeafe;
+}
+.rc-summary-cell {
+  text-align: center;
+  padding: 5px 8px;
+  border-right: 1px solid #dbeafe;
+}
+.rc-summary-cell:last-child { border-right: none; }
+.rc-summary-cell .s-label { font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; }
+.rc-summary-cell .s-value { font-size: 13px; font-weight: 700; color: #1e40af; margin-top: 1px; }
+
+.rc-comments {
+  padding: 7px 10px 8px;
+  border-top: 1px solid #dbeafe;
+}
+.rc-comment-row { margin-bottom: 8px; }
+.rc-comment-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; color: #6b7280; letter-spacing: 0.5px; margin-bottom: 3px; }
+.rc-comment-box {
+  border-bottom: 1px solid #d1d5db;
+  min-height: 18px;
+  padding: 1px 0;
+  font-size: 11px;
+  color: #374151;
+  font-style: italic;
+}
+
+.rc-signatures {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+  border-top: 1.5px solid #dbeafe;
+}
+.rc-sig-cell {
+  padding: 7px 10px;
+  border-right: 1px solid #dbeafe;
+  text-align: center;
+}
+.rc-sig-cell:last-child { border-right: none; }
+.rc-sig-line { border-bottom: 1.5px solid #374151; margin: 18px 10px 4px; }
+.rc-sig-label { font-size: 10px; font-weight: 600; color: #6b7280; }
+.rc-sig-date { font-size: 9.5px; color: #9ca3af; margin-top: 2px; }
+
+.rc-footer-note {
+  background: #1e40af;
+  color: rgba(255,255,255,0.8);
+  text-align: center;
+  font-size: 9.5px;
+  padding: 5px;
+  font-style: italic;
+}
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 600px) {
+  .stats-strip { grid-template-columns: 1fr 1fr; }
+  .form-row-2 { grid-template-columns: 1fr; }
+  .form-row-3 { grid-template-columns: 1fr; }
+  .topbar-brand h1 span { font-size: 10px; display: block; }
+  .rc-info-grid { grid-template-columns: 1fr 1fr; }
+  .rc-bottom-section { grid-template-columns: 1fr; }
+  .rc-bottom-col { border-right: none; border-bottom: 1px solid #dbeafe; }
+  .rc-signatures { grid-template-columns: 1fr; }
+  .rc-sig-cell { border-right: none; border-bottom: 1px solid #dbeafe; }
+  .rc-summary-bar { grid-template-columns: 1fr 1fr; }
+  .nav-tab { padding: 11px 12px; font-size: 12px; gap: 4px; }
+  .main { padding: 14px 12px 100px; }
+  .card-body { padding: 12px 14px 16px; }
+}
+.class-chip-card { background: white; border: 1.5px solid var(--gray-200); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
+.subj-mini-chip { display: inline-flex; align-items: center; gap: 4px; background: var(--gray-100); border-radius: 6px; padding: 3px 8px; font-size: 11.5px; font-weight: 600; color: var(--gray-600); margin: 2px 3px 2px 0; }
+.level-chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.level-chip { padding: 9px 14px; border-radius: 20px; border: 1.5px solid var(--gray-200); background: white; font-size: 13px; font-weight: 600; color: var(--gray-600); cursor: pointer; transition: all 0.12s; user-select: none; }
+.level-chip:active { transform: scale(0.96); }
+.level-chip.active { background: var(--blue); border-color: var(--blue); color: white; }
+</style>
+</head>
+<body>
+
+<!-- ========================================================
+     MAIN APP (opens straight in — no login)
+======================================================== -->
+<div id="screen-adminApp">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="logo">📚</div>
+    <div><h1>EduResult <span id="roleSchoolName">Wellspring Academy</span></h1></div>
+  </div>
+</div>
+
+<!-- NAV TABS -->
+<div class="nav-tabs no-print">
+  <div class="nav-tab active" id="tab-a-setup" onclick="switchAdminTab('setup')">⚙️ Setup</div>
+  <div class="nav-tab" id="tab-a-classes" onclick="switchAdminTab('classes')">🏫 Classes</div>
+  <div class="nav-tab" id="tab-a-students" onclick="switchAdminTab('students')">👥 Students</div>
+  <div class="nav-tab" id="tab-a-compile" onclick="switchAdminTab('compile')">🧮 Compile</div>
+  <div class="nav-tab" id="tab-a-results" onclick="switchAdminTab('results')">📊 Results</div>
+  <div class="nav-tab" id="tab-a-print" onclick="switchAdminTab('print')">🖨️ Print</div>
+  <div class="nav-tab" id="tab-a-analytics" onclick="switchAdminTab('analytics')">📈 Analytics</div>
+</div>
+
+<div class="main">
+
+<!-- ========== PANEL: SETUP ========== -->
+<div class="panel active" id="panel-a-setup">
+  <div class="card">
+    <div class="card-header"><div class="card-title"><div class="icon">🏫</div> School Information</div></div>
+    <div class="card-body">
+      <div class="form-row-2">
+        <div class="form-group"><label>School Name</label><input type="text" id="schoolName" placeholder="e.g. Wellspring Academy" oninput="saveSetup()"></div>
+        <div class="form-group"><label>School Address</label><input type="text" id="schoolAddress" placeholder="Full school address" oninput="saveSetup()"></div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label>Term</label>
+          <select id="term" onchange="saveSetup()"><option>FIRST TERM</option><option>SECOND TERM</option><option>THIRD TERM</option></select>
+        </div>
+        <div class="form-group"><label>Session</label><input type="text" id="session" placeholder="2025/2026" oninput="saveSetup()"></div>
+        <div class="form-group"><label>Next Resumption</label><input type="text" id="resumption" placeholder="e.g. Sept 8, 2026" oninput="saveSetup()"></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group"><label>Principal / Headmistress Name</label><input type="text" id="principalName" placeholder="Full name" oninput="saveSetup()"></div>
+        <div class="form-group"><label>School Phone / Email</label><input type="text" id="schoolContact" placeholder="e.g. 0908..." oninput="saveSetup()"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-title"><div class="icon">🖼️</div> School Images</div></div>
+    <div class="card-body">
+      <div class="form-row-3">
+        <div class="form-group" style="margin:0;">
+          <label>School Logo</label>
+          <div class="img-upload-box" id="logoBox">
+            <input type="file" accept="image/*" onchange="handleImageUpload('logo', this)">
+            <div class="img-upload-emoji">🏫</div><div class="upload-label">Tap to upload logo</div><div class="upload-hint">PNG or JPG</div>
+            <img class="img-preview" id="logoPreview" src="" alt="Logo">
+            <button class="img-clear-btn" id="logoClear" onclick="clearImage(event,'logo')">×</button>
+          </div>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label>Headmistress Signature</label>
+          <div class="img-upload-box" id="sigBox">
+            <input type="file" accept="image/*" onchange="handleImageUpload('signature', this)">
+            <div class="img-upload-emoji">✍️</div><div class="upload-label">Tap to upload signature</div><div class="upload-hint">PNG with transparent bg works best</div>
+            <img class="img-preview" id="sigPreview" src="" alt="Signature">
+            <button class="img-clear-btn" id="sigClear" onclick="clearImage(event,'signature')">×</button>
+          </div>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label>School Stamp</label>
+          <div class="img-upload-box" id="stampBox">
+            <input type="file" accept="image/*" onchange="handleImageUpload('stamp', this)">
+            <div class="img-upload-emoji">🔖</div><div class="upload-label">Tap to upload stamp</div><div class="upload-hint">PNG or JPG</div>
+            <img class="img-preview" id="stampPreview" src="" alt="Stamp">
+            <button class="img-clear-btn" id="stampClear" onclick="clearImage(event,'stamp')">×</button>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:11.5px;color:var(--gray-400);margin-top:10px;">Signature is auto-stamped on every printed report card — no per-student signing needed.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-title"><div class="icon">🧮</div> Scoring Structure</div></div>
+    <div class="card-body">
+      <div class="form-row-3">
+        <div class="form-group"><label>CA1 Max</label><input type="number" id="ca1Max" min="1" max="100" oninput="saveSetup()"></div>
+        <div class="form-group"><label>CA2 Max</label><input type="number" id="ca2Max" min="1" max="100" oninput="saveSetup()"></div>
+        <div class="form-group"><label>Exam Max</label><input type="number" id="examMax" min="1" max="100" oninput="saveSetup()"></div>
+      </div>
+      <p style="font-size:11.5px;color:var(--gray-400);margin:-6px 0 14px;">CA1, CA2 and Exam are all entered together for each student in the Compile tab. These three should add up to 100.</p>
+      <div class="form-group" style="display:flex;align-items:center;justify-content:space-between;background:var(--gray-50);border-radius:10px;padding:12px 14px;margin-top:4px;">
+        <div>
+          <label style="margin:0;">Show Position on Printed Report Card</label>
+          <p style="font-size:11px;color:var(--gray-400);margin:2px 0 0;">Position is always calculated internally. This only controls whether it prints.</p>
+        </div>
+        <label style="position:relative;display:inline-block;width:48px;height:26px;flex-shrink:0;margin-left:12px;text-transform:none;letter-spacing:0;">
+          <input type="checkbox" id="showPositionToggle" onchange="saveSetup()" style="opacity:0;width:0;height:0;position:absolute;">
+          <span id="posSlider" style="position:absolute;cursor:pointer;inset:0;background:var(--gray-300);border-radius:26px;transition:0.3s;">
+            <span style="position:absolute;content:'';height:20px;width:20px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s;display:block;" id="posThumb"></span>
+          </span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="border-color:#fecaca;">
+    <div class="card-header"><div class="card-title" style="color:var(--red);"><div class="icon">⚠️</div> Danger Zone</div></div>
+    <div class="card-body">
+      <button class="btn" style="background:#fee2e2;color:var(--red);width:100%;" onclick="resetAll()">🗑️ Delete All Data</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== PANEL: CLASSES ========== -->
+<div class="panel" id="panel-a-classes">
+  <div class="card">
+    <div class="card-header"><div class="card-title"><div class="icon">🏫</div> Activate Classes</div></div>
+    <div class="card-body">
+      <p style="font-size:11.5px;color:var(--gray-400);margin:0 0 12px;">Tap a class to activate it for this school — from Creche to SSS3. Tap an active one to remove it (its students &amp; results go too).</p>
+      <div class="level-chip-grid" id="levelChipGrid"></div>
+    </div>
+  </div>
+  <div id="classListWrap"></div>
+</div>
+
+<!-- ========== PANEL: STUDENTS ========== -->
+<div class="panel" id="panel-a-students">
+  <div class="card">
+    <div class="card-header"><div class="card-title"><div class="icon">👥</div> Select Class</div></div>
+    <div class="card-body">
+      <div class="form-group" style="margin:0;"><select id="studClassSelect" onchange="renderStudentList()"></select></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title"><div class="icon">➕</div> Add Student</div></div>
+    <div class="card-body">
+      <div class="form-row-3">
+        <div class="form-group" style="margin:0;"><input type="text" id="newStudentName" placeholder="Student full name"></div>
+        <div class="form-group" style="margin:0;">
+          <select id="newStudentGender"><option value="M">Male</option><option value="F">Female</option></select>
+        </div>
+        <button class="btn btn-primary" onclick="addStudent()">+ Add</button>
+      </div>
+      <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="toggleBulkAdd()">📋 Bulk Add (one name per line)</button>
+      <div id="bulkAddBox" style="display:none;margin-top:10px;">
+        <textarea id="bulkAddText" rows="5" placeholder="One student name per line" style="width:100%;border:1.5px solid var(--gray-200);border-radius:8px;padding:10px;font-family:inherit;font-size:13px;"></textarea>
+        <button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="bulkAddStudents()">Add All</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title"><div class="icon">📋</div> Class Roster <span class="badge" id="badge-students">0</span></div></div>
+    <div class="card-body" style="padding:0;"><div id="studentListWrap"></div></div>
+  </div>
+</div>
+
+<!-- ========== PANEL: COMPILE (Admin enters Exam + attendance + ratings + comments) ========== -->
+<div class="panel" id="panel-a-compile">
+  <div class="card">
+    <div class="card-header"><div class="card-title"><div class="icon">🧮</div> Select Class</div></div>
+    <div class="card-body">
+      <div class="form-group" style="margin:0;"><select id="compileClassSelect" onchange="renderCompileList()"></select></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title"><div class="icon">📝</div> Tap a student to compile</div></div>
+    <div class="card-body" style="padding:0;" id="compileListWrap"></div>
+  </div>
+</div>
+
+<!-- ========== PANEL: RESULTS ========== -->
+<div class="panel" id="panel-a-results">
+  <div class="card">
+    <div class="card-header"><div class="card-title"><div class="icon">📊</div> Select Class</div></div>
+    <div class="card-body"><div class="form-group" style="margin:0;"><select id="resultsClassSelect" onchange="renderResults()"></select></div></div>
+  </div>
+  <div class="stats-strip" id="resultsStats">
+    <div class="stat-box"><div class="value" id="stat-total">0</div><div class="label">Students</div></div>
+    <div class="stat-box"><div class="value" id="stat-avg">--</div><div class="label">Class Avg</div></div>
+    <div class="stat-box"><div class="value" id="stat-pass">0</div><div class="label">Passed</div></div>
+    <div class="stat-box"><div class="value" id="stat-fail">0</div><div class="label">Failed</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><div class="icon">🏆</div> Class Results</div>
+      <select id="sortSelect" class="btn btn-ghost btn-sm" style="padding:7px 10px;font-size:12px;cursor:pointer;" onchange="renderResults()">
+        <option value="pos">Sort by Position</option>
+        <option value="name">Sort by Name</option>
+        <option value="total">Sort by Total</option>
+      </select>
+    </div>
+    <div class="card-body" style="padding:0;"><div class="table-wrap"><div id="resultsTableWrap"></div></div></div>
+  </div>
+</div>
+
+<!-- ========== PANEL: PRINT ========== -->
+<div class="panel" id="panel-a-print">
+  <div class="card">
+    <div class="card-header"><div class="card-title"><div class="icon">🖨️</div> Choose Class &amp; Student</div></div>
+    <div class="card-body">
+      <div class="form-row-2">
+        <div class="form-group"><label>Class</label><select id="printClassSelect" onchange="populatePrintSelect()"></select></div>
+        <div class="form-group"><label>Student</label><select id="printStudentSelect" onchange="previewReportCard()"></select></div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="printCurrent()">🖨️ Print / Save as PDF</button>
+    </div>
+  </div>
+  <div class="card no-print">
+    <div class="card-header"><div class="card-title"><div class="icon">👁️</div> Preview</div></div>
+    <div class="card-body" id="reportCardPreview" style="background:var(--gray-50);">
+      <div class="empty-state"><div class="empty-icon">📄</div><p>Select a class and student to preview their report card.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== PANEL: ANALYTICS ========== -->
+<div class="panel" id="panel-a-analytics">
+  <div class="card">
+    <div class="card-header"><div class="card-title"><div class="icon">📈</div> Select Class</div></div>
+    <div class="card-body"><div class="form-group" style="margin:0;"><select id="analyticsClassSelect" onchange="renderAnalytics()"></select></div></div>
+  </div>
+  <div class="stats-strip" id="analyticsStats" style="grid-template-columns:repeat(4,1fr);">
+    <div class="stat-box"><div class="value" id="an-students">0</div><div class="label">Students</div></div>
+    <div class="stat-box"><div class="value" id="an-avg">--</div><div class="label">Class Avg</div></div>
+    <div class="stat-box"><div class="value" id="an-pass">0%</div><div class="label">Pass Rate</div></div>
+    <div class="stat-box"><div class="value" id="an-subjects">0</div><div class="label">Subjects</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;" id="an-extremes"></div>
+  <div class="card"><div class="card-header"><div class="card-title"><div class="icon">📊</div> Grade Distribution</div></div><div class="card-body" id="an-grades"></div></div>
+  <div class="card"><div class="card-header"><div class="card-title"><div class="icon">📚</div> Subject Performance</div></div><div class="card-body" id="an-subjects-perf" style="padding:0 20px 16px;"></div></div>
+  <div class="card"><div class="card-header"><div class="card-title"><div class="icon">🏆</div> Student Rankings</div></div><div class="card-body" style="padding:0;"><div class="table-wrap"><div id="an-rankings"></div></div></div></div>
+</div>
+
+</div><!-- end main -->
+
+<!-- COMPILE DRAWER (admin: exam + attendance + ratings + comments) -->
+<div class="drawer-overlay" id="compileDrawer" onclick="handleCompileDrawerOverlayClick(event)">
+  <div class="drawer" id="compileDrawerInner">
+    <div class="drawer-handle"></div>
+    <div class="drawer-header">
+      <div class="drawer-title" id="compileStudentName">Student</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeCompileDrawer()">✕ Close</button>
+    </div>
+    <div class="drawer-body">
+      <div class="drawer-section">
+        <div class="drawer-section-title">✏️ Subject Scores — CA1, CA2 &amp; Exam, all entered here</div>
+        <div class="score-entry-headers" id="compileScoreHeaders">
+          <span>Subject</span><span>CA1</span><span>CA2</span><span>Exam</span><span>Total</span>
+        </div>
+        <div class="score-entry-grid" id="compileScoreGrid"></div>
+      </div>
+      <div class="drawer-section">
+        <div class="drawer-section-title">📅 Attendance</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="form-group" style="margin:0;"><label>Times School Opened</label>
+            <input type="number" id="cDrawerOpened" min="0" placeholder="e.g. 62" style="text-align:center;font-weight:700;" oninput="updateCompileAbsentCalc()"></div>
+          <div class="form-group" style="margin:0;"><label>Times Present</label>
+            <input type="number" id="cDrawerPresent" min="0" placeholder="e.g. 58" style="text-align:center;font-weight:700;" oninput="updateCompileAbsentCalc()"></div>
+        </div>
+        <div id="cAbsentCalc" style="display:none;margin-top:8px;padding:8px 12px;background:var(--gray-50);border-radius:7px;font-size:12.5px;color:var(--gray-600);">
+          Times Absent (auto): <strong id="cAbsentCount" style="color:var(--red);">0</strong>
+        </div>
+      </div>
+      <div class="drawer-section"><div class="drawer-section-title">🧠 Affective / Behavioural Report</div><div class="rating-grid-2col" id="cDrawerAffective"></div></div>
+      <div class="drawer-section"><div class="drawer-section-title">🤸 Psychomotor Report</div><div class="rating-grid-2col" id="cDrawerPsychomotor"></div></div>
+      <div class="drawer-section">
+        <div class="drawer-section-title">💬 Comments</div>
+        <div class="form-group"><label>Class Teacher's Comment</label><textarea class="comment-area" id="cDrawerTeacherComment" placeholder="e.g. A hardworking student..."></textarea></div>
+        <div class="form-group" style="margin-bottom:0;"><label>Principal's / Head Teacher's Comment</label><textarea class="comment-area" id="cDrawerPrincipalComment" placeholder="e.g. Excellent performance..."></textarea></div>
+      </div>
+      <button class="btn btn-primary btn-full" style="margin-top:4px;padding:14px;" onclick="saveCompileDrawer()">💾 Save All Data for This Student</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- end screen-adminApp -->
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ===================== STATE =====================
+let state = {
+  meta: {
+    schoolName: 'Wellspring Academy',
+    schoolAddress: '',
+    schoolContact: '',
+    term: 'FIRST TERM',
+    session: '2025/2026',
+    principalName: '',
+    resumption: '',
+    ca1Max: 20,
+    ca2Max: 20,
+    examMax: 60,
+    showPosition: false,
+    logo: '',
+    signature: '',
+    stamp: ''
+  },
+  classes: [],      // [{id, name, subjects:[...], classTeacherName}]
+  students: [],      // [{id, name, gender, classId}]
+  scores: {}         // scores[studentId] = {...}
+};
+
+// Preset class levels, Creche through SSS3 — kept distinct & in this fixed order everywhere
+const CLASS_LEVELS = [
+  'Creche', 'Nursery 1', 'Nursery 2', 'KG 1', 'KG 2',
+  'Primary 1', 'Primary 2', 'Primary 3', 'Primary 4', 'Primary 5', 'Primary 6',
+  'JSS 1', 'JSS 2', 'JSS 3', 'SSS 1', 'SSS 2', 'SSS 3'
+];
+function sortClassesByLevel(arr) {
+  return [...arr].sort((a, b) => CLASS_LEVELS.indexOf(a.name) - CLASS_LEVELS.indexOf(b.name));
+}
+
+const AFFECTIVE = ['Punctuality','Attentiveness','Neatness','Honesty','Respect','Leadership','Co-operation','Diligence'];
+const PSYCHOMOTOR = ['Handwriting','Drawing/Painting','Sport & Games','Practical Skills','Oral Communication','Creative Ability'];
+const RATINGS = ['','1 - Poor','2 - Fair','3 - Good','4 - Very Good','5 - Excellent'];
+
+let currentCompileStudentId = null;
+let currentCompileClassId = null;
+
+// ===================== STORAGE =====================
+function loadState() {
+  try {
+    const saved = localStorage.getItem('eduresult_state');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      state.meta        = Object.assign({}, state.meta, parsed.meta || {});
+      state.classes      = parsed.classes      || [];
+      state.students     = parsed.students     || [];
+      state.scores       = parsed.scores       || {};
+    }
+    state.meta.logo      = localStorage.getItem('eduresult_logo')      || '';
+    state.meta.signature = localStorage.getItem('eduresult_signature') || '';
+    state.meta.stamp     = localStorage.getItem('eduresult_stamp')     || '';
+  } catch(e) {
+    console.warn('EduResult: Could not load saved data', e);
+  }
+}
+
+function saveState() {
+  try {
+    const toSave = {
+      meta: Object.assign({}, state.meta, { logo:'', signature:'', stamp:'' }),
+      classes: state.classes,
+      students: state.students,
+      scores: state.scores
+    };
+    localStorage.setItem('eduresult_state', JSON.stringify(toSave));
+  } catch(e) {
+    console.warn('EduResult: Could not save state — storage may be full', e);
+    showToast('⚠️ Save failed — storage full', 'error');
+  }
+}
+
+function saveImage(type, base64) {
+  try {
+    if (base64) localStorage.setItem('eduresult_' + type, base64);
+    else localStorage.removeItem('eduresult_' + type);
+    state.meta[type] = base64;
+  } catch(e) {
+    showToast('Image too large to save offline', 'error');
+  }
+}
+
+function generateId() {
+  return 'id_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
+}
+
+function findClass(id) { return state.classes.find(c => c.id === id); }
+function findStudent(id) { return state.students.find(s => s.id === id); }
+
+// ===================== APP INIT =====================
+function initApp() {
+  document.getElementById('roleSchoolName').textContent = state.meta.schoolName || 'School';
+  populateSetupForm();
+  refreshAllClassDropdowns();
+  renderClassList();
+  renderStudentList();
+  renderCompileList();
+  renderResults();
+  populatePrintSelect();
+  renderAnalytics();
+  updateBadges();
+  switchAdminTab('setup');
+}
+
+// ===================== TABS =====================
+function switchAdminTab(tab) {
+  ['setup','classes','students','compile','results','print','analytics'].forEach(t => {
+    document.getElementById('panel-a-' + t).classList.toggle('active', t === tab);
+    document.getElementById('tab-a-' + t).classList.toggle('active', t === tab);
+  });
+  if (tab === 'compile') renderCompileList();
+  if (tab === 'results') renderResults();
+  if (tab === 'print') populatePrintSelect();
+  if (tab === 'analytics') renderAnalytics();
+}
+
+
+// ===================== SETUP =====================
+function setVal(id, val) { const el = document.getElementById(id); if (el) el.value = val || ''; }
+function populateSetupForm() {
+  const m = state.meta;
+  setVal('schoolName', m.schoolName);
+  setVal('schoolAddress', m.schoolAddress);
+  setVal('term', m.term);
+  setVal('session', m.session);
+  setVal('resumption', m.resumption);
+  setVal('principalName', m.principalName);
+  setVal('schoolContact', m.schoolContact);
+  setVal('ca1Max', m.ca1Max);
+  setVal('ca2Max', m.ca2Max);
+  setVal('examMax', m.examMax);
+  document.getElementById('roleSchoolName').textContent = m.schoolName || 'School';
+
+  const toggle = document.getElementById('showPositionToggle');
+  if (toggle) toggle.checked = m.showPosition || false;
+  const slider = document.getElementById('posSlider');
+  const thumb = document.getElementById('posThumb');
+  if (slider) slider.style.background = m.showPosition ? 'var(--blue)' : 'var(--gray-300)';
+  if (thumb) thumb.style.transform = m.showPosition ? 'translateX(22px)' : 'translateX(0)';
+
+  loadImagePreview('logo', m.logo);
+  loadImagePreview('signature', m.signature);
+  loadImagePreview('stamp', m.stamp);
+}
+function getVal(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+function saveSetup() {
+  const m = state.meta;
+  m.schoolName = getVal('schoolName');
+  m.schoolAddress = getVal('schoolAddress');
+  m.term = getVal('term');
+  m.session = getVal('session');
+  m.resumption = getVal('resumption');
+  m.principalName = getVal('principalName');
+  m.schoolContact = getVal('schoolContact');
+  m.ca1Max = parseInt(getVal('ca1Max')) || 20;
+  m.ca2Max = parseInt(getVal('ca2Max')) || 20;
+  m.examMax = parseInt(getVal('examMax')) || 60;
+  const toggle = document.getElementById('showPositionToggle');
+  m.showPosition = toggle ? toggle.checked : false;
+  const slider = document.getElementById('posSlider');
+  const thumb = document.getElementById('posThumb');
+  if (slider && thumb) {
+    slider.style.background = m.showPosition ? 'var(--blue)' : 'var(--gray-300)';
+    thumb.style.transform = m.showPosition ? 'translateX(22px)' : 'translateX(0)';
+  }
+  document.getElementById('roleSchoolName').textContent = m.schoolName || 'School';
+  saveState();
+}
+function resetAll() {
+  if (!confirm('DELETE ALL DATA? This cannot be undone.')) return;
+  if (!confirm('Are you absolutely sure? All classes, teachers, students and scores will be lost.')) return;
+  localStorage.removeItem('eduresult_state');
+  localStorage.removeItem('eduresult_logo');
+  localStorage.removeItem('eduresult_signature');
+  localStorage.removeItem('eduresult_stamp');
+  location.reload();
+}
+
+// ===================== CLASSES =====================
+function toggleClassLevel(name) {
+  const existing = state.classes.find(c => c.name === name);
+  if (existing) {
+    removeClass(existing.id);
+    return;
+  }
+  state.classes.push({ id: generateId(), name, subjects: [], classTeacherName: '' });
+  saveState();
+  renderClassList();
+  refreshAllClassDropdowns();
+  showToast('✅ ' + name + ' activated', 'success');
+}
+function removeClass(id) {
+  const cls = findClass(id);
+  if (!cls) return;
+  if (!confirm('Remove "' + cls.name + '"? Its students and results will also be removed.')) return;
+  const studentIds = state.students.filter(s => s.classId === id).map(s => s.id);
+  state.students = state.students.filter(s => s.classId !== id);
+  studentIds.forEach(sid => delete state.scores[sid]);
+  state.classes = state.classes.filter(c => c.id !== id);
+  saveState();
+  renderClassList();
+  refreshAllClassDropdowns();
+  updateBadges();
+}
+function updateClassTeacherName(id, val) {
+  const cls = findClass(id);
+  if (!cls) return;
+  cls.classTeacherName = val;
+  saveState();
+}
+function addSubjectToClass(id) {
+  const cls = findClass(id);
+  if (!cls) return;
+  const input = document.getElementById('subjInput-' + id);
+  const name = input.value.trim();
+  if (!name) return;
+  if (cls.subjects.some(s => s.toLowerCase() === name.toLowerCase())) {
+    showToast('Subject already in this class', 'error'); return;
+  }
+  cls.subjects.push(name);
+  saveState();
+  input.value = '';
+  renderClassList();
+}
+function removeSubjectFromClass(id, subj) {
+  const cls = findClass(id);
+  if (!cls) return;
+  cls.subjects = cls.subjects.filter(s => s !== subj);
+  saveState();
+  renderClassList();
+}
+function renderClassLevelPicker() {
+  const wrap = document.getElementById('levelChipGrid');
+  if (!wrap) return;
+  wrap.innerHTML = CLASS_LEVELS.map(name => {
+    const active = state.classes.some(c => c.name === name);
+    return `<div class="level-chip ${active?'active':''}" onclick="toggleClassLevel('${name.replace(/'/g,"\\'")}')">${name}</div>`;
+  }).join('');
+}
+function renderClassList() {
+  renderClassLevelPicker();
+  const wrap = document.getElementById('classListWrap');
+  const sorted = sortClassesByLevel(state.classes);
+  if (!sorted.length) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">🏫</div><p>No classes activated yet. Tap a class above, from Creche to SSS3.</p></div>`;
+    return;
+  }
+  wrap.innerHTML = sorted.map(cls => {
+    const studentCount = state.students.filter(s => s.classId === cls.id).length;
+    return `<div class="class-chip-card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <div style="flex:1;font-weight:700;font-size:14.5px;color:var(--gray-800);">${cls.name}</div>
+        <span class="badge" style="position:static;">${studentCount} student${studentCount!==1?'s':''}</span>
+        <button class="btn btn-ghost btn-sm" onclick="removeClass('${cls.id}')" style="color:var(--red);">🗑️</button>
+      </div>
+      <div class="form-group" style="margin-bottom:8px;">
+        <label style="font-size:10.5px;">Class Teacher (for report card signature line)</label>
+        <input type="text" value="${cls.classTeacherName||''}" placeholder="e.g. Mrs. Adamu" oninput="updateClassTeacherName('${cls.id}', this.value)">
+      </div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gray-400);margin-bottom:5px;">Subjects</div>
+      <div style="margin-bottom:8px;">
+        ${cls.subjects.length ? cls.subjects.map(s => `<span class="subj-mini-chip">${s} <span style="cursor:pointer;color:#fca5a5;" onclick="removeSubjectFromClass('${cls.id}','${s.replace(/'/g,"\\'")}')">×</span></span>`).join('') : '<span style="font-size:12px;color:var(--gray-400);">No subjects yet</span>'}
+      </div>
+      <div style="display:flex;gap:6px;">
+        <input type="text" id="subjInput-${cls.id}" placeholder="Add subject e.g. Mathematics" style="flex:1;padding:7px 10px;border:1.5px solid var(--gray-200);border-radius:7px;font-size:12.5px;" onkeydown="if(event.key==='Enter')addSubjectToClass('${cls.id}')">
+        <button class="btn btn-outline btn-sm" onclick="addSubjectToClass('${cls.id}')">+ Add</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Populate every dropdown that lists classes, preserving current selection if possible, always in Creche→SSS3 order
+function refreshAllClassDropdowns() {
+  const ids = ['studClassSelect','compileClassSelect','resultsClassSelect','printClassSelect','analyticsClassSelect'];
+  const sorted = sortClassesByLevel(state.classes);
+  ids.forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = sorted.length
+      ? sorted.map(c => `<option value="${c.id}">${c.name}</option>`).join('')
+      : '<option value="">No classes yet</option>';
+    if (sorted.some(c => c.id === prev)) sel.value = prev;
+  });
+}
+
+// ===================== STUDENTS =====================
+function toggleBulkAdd() {
+  const box = document.getElementById('bulkAddBox');
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
+function currentStudClassId() { return getVal('studClassSelect'); }
+function addStudent() {
+  const classId = currentStudClassId();
+  if (!classId) { showToast('Add a class first (Classes tab)', 'error'); return; }
+  const name = getVal('newStudentName').trim();
+  if (!name) { showToast('Enter a student name', 'error'); return; }
+  const gender = getVal('newStudentGender') || 'M';
+  state.students.push({ id: generateId(), name, gender, classId });
+  saveState();
+  setVal('newStudentName', '');
+  renderStudentList();
+  updateBadges();
+  showToast('✅ ' + name + ' added', 'success');
+}
+function bulkAddStudents() {
+  const classId = currentStudClassId();
+  if (!classId) { showToast('Add a class first (Classes tab)', 'error'); return; }
+  const text = document.getElementById('bulkAddText').value;
+  const names = text.split('\n').map(n => n.trim()).filter(Boolean);
+  if (!names.length) { showToast('Enter at least one name', 'error'); return; }
+  names.forEach(name => state.students.push({ id: generateId(), name, gender: 'M', classId }));
+  saveState();
+  document.getElementById('bulkAddText').value = '';
+  document.getElementById('bulkAddBox').style.display = 'none';
+  renderStudentList();
+  updateBadges();
+  showToast('✅ ' + names.length + ' students added', 'success');
+}
+function removeStudent(id) {
+  const st = findStudent(id);
+  if (!st) return;
+  if (!confirm('Remove ' + st.name + '? Their scores will also be removed.')) return;
+  delete state.scores[id];
+  state.students = state.students.filter(s => s.id !== id);
+  saveState();
+  renderStudentList();
+  renderClassList();
+  updateBadges();
+}
+function editStudentName(id, val) {
+  const st = findStudent(id);
+  if (!st) return;
+  st.name = val.trim() || st.name;
+  saveState();
+}
+function updateStudentGender(id, gender) {
+  const st = findStudent(id);
+  if (!st) return;
+  st.gender = gender;
+  saveState();
+  renderStudentList();
+}
+function renderStudentList() {
+  const wrap = document.getElementById('studentListWrap');
+  const classId = currentStudClassId();
+  if (!classId) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">🏫</div><p>Add a class first (Classes tab).</p></div>`;
+    return;
+  }
+  const roster = state.students.filter(s => s.classId === classId);
+  if (!roster.length) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><p>No students in this class yet.</p></div>`;
+    return;
+  }
+  wrap.innerHTML = roster.map((st,i) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--gray-100);">
+      <div style="display:flex;align-items:center;gap:12px;flex:1;">
+        <div style="width:32px;height:32px;background:var(--blue-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--blue);font-size:12px;flex-shrink:0;">${i+1}</div>
+        <input type="text" value="${st.name}" onchange="editStudentName('${st.id}', this.value)" style="border:none;background:transparent;font-weight:600;font-size:14px;flex:1;">
+      </div>
+      <div style="display:flex;gap:4px;margin-right:10px;">
+        <button class="btn btn-sm ${st.gender==='M'?'btn-primary':'btn-outline'}" style="padding:5px 10px;" onclick="updateStudentGender('${st.id}','M')">M</button>
+        <button class="btn btn-sm ${st.gender==='F'?'btn-primary':'btn-outline'}" style="padding:5px 10px;" onclick="updateStudentGender('${st.id}','F')">F</button>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="removeStudent('${st.id}')" style="color:var(--red);">🗑️</button>
+    </div>`).join('');
+}
+function updateBadges() {
+  const classId = currentStudClassId();
+  const count = classId ? state.students.filter(s => s.classId === classId).length : state.students.length;
+  const badge = document.getElementById('badge-students');
+  if (badge) badge.textContent = count;
+}
+
+// ===================== CALCULATION ENGINE =====================
+function getSubjectScore(sc, subj) {
+  const ca1 = Math.max(0, Math.min(parseInt(sc[subj+'_ca1'])||0, state.meta.ca1Max||20));
+  const ca2 = Math.max(0, Math.min(parseInt(sc[subj+'_ca2'])||0, state.meta.ca2Max||20));
+  const exam = Math.max(0, Math.min(parseInt(sc[subj+'_exam'])||0, state.meta.examMax||60));
+  const total = ca1 + ca2 + exam;
+  const grade = total > 0 ? calcGrade(total) : '';
+  return { ca1, ca2, exam, total, grade };
+}
+function calcGrade(avg) {
+  if (avg >= 70) return 'A';
+  if (avg >= 60) return 'B';
+  if (avg >= 50) return 'C';
+  if (avg >= 45) return 'D';
+  if (avg >= 40) return 'E';
+  return 'F';
+}
+function gradeRemark(g) {
+  const r={A:'Excellent',B:'Very Good',C:'Good',D:'Pass',E:'Pass (Low)',F:'Fail'};
+  return r[g]||'';
+}
+function computeStudent(student, cls) {
+  const sc = state.scores[student.id] || {};
+  const subjects = (cls.subjects || []).filter(Boolean);
+  const subjectData = {};
+  let grandTotal = 0, filledCount = 0;
+  subjects.forEach(subj => {
+    const scores = getSubjectScore(sc, subj);
+    subjectData[subj] = scores;
+    if (scores.total > 0) { grandTotal += scores.total; filledCount++; }
+  });
+  const subjectCount = subjects.length;
+  const avg = filledCount > 0 ? parseFloat((grandTotal/filledCount).toFixed(1)) : 0;
+  const overallGrade = avg > 0 ? calcGrade(avg) : '';
+  return {
+    id: student.id, name: student.name, gender: student.gender || 'M', classId: student.classId,
+    subjects: subjectData, grandTotal, filledCount, subjectCount, avg, overallGrade,
+    completion: filledCount===0 ? 'empty' : filledCount===subjectCount ? 'full' : 'partial'
+  };
+}
+function computeAllStudents(classId) {
+  const cls = findClass(classId);
+  if (!cls) return [];
+  const roster = state.students.filter(s => s.classId === classId);
+  const students = roster.map(s => computeStudent(s, cls));
+  const sorted = [...students].sort((a,b) => b.avg - a.avg);
+  sorted.forEach((s,i) => {
+    if (i===0) s.position = 1;
+    else if (s.avg === sorted[i-1].avg) s.position = sorted[i-1].position;
+    else s.position = i+1;
+  });
+  const posMap = {};
+  sorted.forEach(s => posMap[s.id] = s.position);
+  students.forEach(s => s.position = posMap[s.id] || 0);
+  return students;
+}
+function getSubjectClassStats(classId, subj) {
+  const totals = computeAllStudents(classId).map(s => s.subjects[subj] ? s.subjects[subj].total : 0).filter(t => t > 0);
+  return { highest: totals.length ? Math.max(...totals) : '--', lowest: totals.length ? Math.min(...totals) : '--' };
+}
+
+// ===================== COMPILE DRAWER =====================
+function renderCompileList() {
+  const wrap = document.getElementById('compileListWrap');
+  const classId = getVal('compileClassSelect');
+  if (!classId) { wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">🏫</div><p>Add a class first (Classes tab).</p></div>`; return; }
+  const cls = findClass(classId);
+  const students = computeAllStudents(classId);
+  if (!students.length) { wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><p>No students in this class yet.</p></div>`; return; }
+  wrap.innerHTML = students.map((s,i) => {
+    const dotClass = s.completion==='full' ? 'dot-full' : s.completion==='partial' ? 'dot-partial' : 'dot-empty';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--gray-100);cursor:pointer;" onclick="openCompileDrawer('${s.id}')">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:36px;height:36px;background:var(--blue-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--blue);font-size:13px;flex-shrink:0;">${i+1}</div>
+        <div>
+          <div style="font-weight:700;font-size:14px;color:var(--gray-800);">${s.name}</div>
+          <div style="font-size:11.5px;color:var(--gray-400);margin-top:1px;display:flex;align-items:center;gap:6px;">
+            <span class="score-completion-dot ${dotClass}"></span>${s.filledCount}/${s.subjectCount} subjects compiled
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        ${s.avg>0?`<div style="text-align:right;"><div style="font-weight:700;font-size:15px;color:${s.avg>=70?'var(--green)':s.avg>=50?'var(--amber)':'var(--red)'};">${s.avg}%</div><div style="font-size:11px;color:var(--gray-400);">avg</div></div>`:''}
+        ${s.overallGrade?`<span class="grade grade-${s.overallGrade}">${s.overallGrade}</span>`:''}
+        <div style="color:var(--gray-300);font-size:18px;">›</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function openCompileDrawer(studentId) {
+  currentCompileStudentId = studentId;
+  currentCompileClassId = getVal('compileClassSelect');
+  const st = findStudent(studentId);
+  const cls = findClass(currentCompileClassId);
+  const sc = state.scores[studentId] || {};
+  document.getElementById('compileStudentName').textContent = st.name;
+  document.getElementById('cDrawerOpened').value = sc._opened || '';
+  document.getElementById('cDrawerPresent').value = sc._present || '';
+  updateCompileAbsentCalc();
+  document.getElementById('cDrawerTeacherComment').value = sc._teacher_comment || '';
+  document.getElementById('cDrawerPrincipalComment').value = sc._principal_comment || '';
+
+  const grid = document.getElementById('compileScoreGrid');
+  const subjects = (cls.subjects||[]).filter(Boolean);
+  grid.innerHTML = subjects.map(subj => {
+    const ca1 = sc[subj+'_ca1'] !== undefined ? sc[subj+'_ca1'] : '';
+    const ca2 = sc[subj+'_ca2'] !== undefined ? sc[subj+'_ca2'] : '';
+    const exam = sc[subj+'_exam'] !== undefined ? sc[subj+'_exam'] : '';
+    const total = (parseInt(ca1)||0)+(parseInt(ca2)||0)+(parseInt(exam)||0);
+    const tc = total>0 ? (total>=70?'high':total>=50?'mid':'low') : '';
+    const key = subj.replace(/[^a-zA-Z0-9]/g,'_');
+    return `<div class="score-entry-row" id="cdrow-${key}">
+      <div class="score-subj-name">${subj}</div>
+      <input type="number" class="score-col-input" min="0" max="${state.meta.ca1Max||20}" value="${ca1}" data-type="ca1" data-key="${key}" oninput="compileScoreInput(this)">
+      <input type="number" class="score-col-input" min="0" max="${state.meta.ca2Max||20}" value="${ca2}" data-type="ca2" data-key="${key}" oninput="compileScoreInput(this)">
+      <input type="number" class="score-col-input" min="0" max="${state.meta.examMax||60}" value="${exam}" data-type="exam" data-key="${key}" oninput="compileScoreInput(this)">
+      <span class="score-total-badge ${tc}" id="cdtotal-${key}">${total||'--'}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('cDrawerAffective').innerHTML = AFFECTIVE.map(t => {
+    const key = 'aff_'+t.replace(/[^a-zA-Z0-9]/g,'_');
+    const val = sc['_aff_'+t] || '0';
+    return `<div class="rating-item"><label>${t}</label><select class="rating-select" id="cdr-${key}">
+      <option value="0">--</option>${[1,2,3,4,5].map(n=>`<option value="${n}" ${val==n?'selected':''}>${n} - ${['Poor','Fair','Good','Very Good','Excellent'][n-1]}</option>`).join('')}
+    </select></div>`;
+  }).join('');
+  document.getElementById('cDrawerPsychomotor').innerHTML = PSYCHOMOTOR.map(t => {
+    const key = 'psy_'+t.replace(/[^a-zA-Z0-9]/g,'_');
+    const val = sc['_psy_'+t] || '0';
+    return `<div class="rating-item"><label>${t}</label><select class="rating-select" id="cdr-${key}">
+      <option value="0">--</option>${[1,2,3,4,5].map(n=>`<option value="${n}" ${val==n?'selected':''}>${n} - ${['Poor','Fair','Good','Very Good','Excellent'][n-1]}</option>`).join('')}
+    </select></div>`;
+  }).join('');
+
+  document.getElementById('compileDrawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function updateCompileAbsentCalc() {
+  const opened = parseInt(document.getElementById('cDrawerOpened')?.value) || 0;
+  const present = parseInt(document.getElementById('cDrawerPresent')?.value) || 0;
+  const calcDiv = document.getElementById('cAbsentCalc');
+  const countEl = document.getElementById('cAbsentCount');
+  if (calcDiv && countEl) {
+    if (opened > 0 || present > 0) { calcDiv.style.display='block'; countEl.textContent = Math.max(0, opened-present); }
+    else calcDiv.style.display = 'none';
+  }
+}
+function compileScoreInput(el) {
+  const max = parseInt(el.getAttribute('max')) || 100;
+  let val = parseInt(el.value);
+  if (!isNaN(val) && val > max) { el.value = max; val = max; }
+  if (!isNaN(val) && val < 0) { el.value = 0; val = 0; }
+  const key = el.dataset.key;
+  const row = document.getElementById('cdrow-' + key);
+  if (!row) return;
+  let ca1=0,ca2=0,exam=0;
+  row.querySelectorAll('input[type="number"]').forEach(inp => {
+    if (inp.dataset.type==='ca1') ca1 = parseInt(inp.value)||0;
+    if (inp.dataset.type==='ca2') ca2 = parseInt(inp.value)||0;
+    if (inp.dataset.type==='exam') exam = parseInt(inp.value)||0;
+  });
+  const total = ca1+ca2+exam;
+  const tc = total>0 ? (total>=70?'high':total>=50?'mid':'low') : '';
+  const badge = document.getElementById('cdtotal-' + key);
+  if (badge) { badge.textContent = total||'--'; badge.className = 'score-total-badge ' + tc; }
+}
+function saveCompileDrawer() {
+  if (!currentCompileStudentId) return;
+  const cls = findClass(currentCompileClassId);
+  if (!state.scores[currentCompileStudentId]) state.scores[currentCompileStudentId] = {};
+  const sc = state.scores[currentCompileStudentId];
+  const subjects = (cls.subjects||[]).filter(Boolean);
+  subjects.forEach(subj => {
+    const key = subj.replace(/[^a-zA-Z0-9]/g,'_');
+    const row = document.getElementById('cdrow-' + key);
+    if (!row) return;
+    row.querySelectorAll('input[type="number"]').forEach(inp => {
+      const val = inp.value.trim()==='' ? '' : parseInt(inp.value);
+      if (inp.dataset.type==='ca1') sc[subj+'_ca1'] = isNaN(val)?'':Math.min(val, state.meta.ca1Max||20);
+      if (inp.dataset.type==='ca2') sc[subj+'_ca2'] = isNaN(val)?'':Math.min(val, state.meta.ca2Max||20);
+      if (inp.dataset.type==='exam') sc[subj+'_exam'] = isNaN(val)?'':Math.min(val, state.meta.examMax||60);
+    });
+  });
+  const _opened = parseInt(document.getElementById('cDrawerOpened')?.value) || 0;
+  const _present = parseInt(document.getElementById('cDrawerPresent')?.value) || 0;
+  sc._opened = _opened || '';
+  sc._present = _present || '';
+  sc._absent = (_opened > 0 && _present >= 0) ? Math.max(0, _opened-_present) : '';
+  AFFECTIVE.forEach(t => { const el = document.getElementById('cdr-aff_'+t.replace(/[^a-zA-Z0-9]/g,'_')); if (el) sc['_aff_'+t] = el.value; });
+  PSYCHOMOTOR.forEach(t => { const el = document.getElementById('cdr-psy_'+t.replace(/[^a-zA-Z0-9]/g,'_')); if (el) sc['_psy_'+t] = el.value; });
+  sc._teacher_comment = document.getElementById('cDrawerTeacherComment').value;
+  sc._principal_comment = document.getElementById('cDrawerPrincipalComment').value;
+  saveState();
+  closeCompileDrawer();
+  renderCompileList();
+  renderResults();
+  showToast('✅ Saved!', 'success');
+}
+function closeCompileDrawer() {
+  document.getElementById('compileDrawer').classList.remove('open');
+  document.body.style.overflow = '';
+  currentCompileStudentId = null;
+}
+function handleCompileDrawerOverlayClick(e) {
+  if (e.target === document.getElementById('compileDrawer')) closeCompileDrawer();
+}
+
+// ===================== RESULTS =====================
+function renderResults() {
+  const classId = getVal('resultsClassSelect');
+  const wrap = document.getElementById('resultsTableWrap');
+  if (!classId) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">📊</div><p>Add a class first (Classes tab).</p></div>`;
+    document.getElementById('stat-total').textContent = 0;
+    document.getElementById('stat-avg').textContent = '--';
+    document.getElementById('stat-pass').textContent = 0;
+    document.getElementById('stat-fail').textContent = 0;
+    return;
+  }
+  const cls = findClass(classId);
+  const students = computeAllStudents(classId);
+  document.getElementById('stat-total').textContent = students.length;
+  if (!students.length) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">📊</div><p>No students in this class yet.</p></div>`;
+    document.getElementById('stat-avg').textContent = '--';
+    document.getElementById('stat-pass').textContent = 0;
+    document.getElementById('stat-fail').textContent = 0;
+    return;
+  }
+  const sort = getVal('sortSelect') || 'pos';
+  const displayed = sort==='name' ? [...students].sort((a,b)=>a.name.localeCompare(b.name))
+                   : sort==='total' ? [...students].sort((a,b)=>b.grandTotal-a.grandTotal)
+                   : [...students].sort((a,b)=>a.position-b.position);
+  const withScores = students.filter(s => s.avg > 0);
+  const passed = withScores.filter(s => s.avg >= 40).length;
+  const failed = withScores.filter(s => s.avg < 40).length;
+  const classAvg = withScores.length ? (withScores.reduce((a,b)=>a+b.avg,0)/withScores.length).toFixed(1) : '--';
+  document.getElementById('stat-avg').textContent = classAvg !== '--' ? classAvg+'%' : '--';
+  document.getElementById('stat-pass').textContent = passed;
+  document.getElementById('stat-fail').textContent = failed;
+  const subjects = (cls.subjects||[]).filter(Boolean);
+  wrap.innerHTML = `<table>
+    <thead><tr>
+      <th>Pos</th><th>Student Name</th>
+      ${subjects.map(s=>`<th class="center" style="font-size:10px;">${s.split(' ')[0]}</th>`).join('')}
+      <th class="center">Total</th><th class="center">Average</th><th class="center">Grade</th>
+    </tr></thead>
+    <tbody>${displayed.map(s => `<tr>
+      <td><span class="pos-badge">${s.position||'--'}</span></td>
+      <td style="font-weight:600;">${s.name}</td>
+      ${subjects.map(subj => {
+        const t = s.subjects[subj] ? s.subjects[subj].total : 0;
+        const g = s.subjects[subj] ? s.subjects[subj].grade : '';
+        return `<td class="center" style="font-size:12px;"><span style="font-weight:600;">${t||'--'}</span>${g?`<span class="grade grade-${g}" style="font-size:10px;width:24px;height:18px;margin-left:2px;">${g}</span>`:''}</td>`;
+      }).join('')}
+      <td class="center total-score ${s.avg>=70?'high':s.avg>=50?'mid':'low'}">${s.grandTotal||'--'}</td>
+      <td class="center" style="font-weight:700;color:var(--gray-600);">${s.avg||'--'}%</td>
+      <td class="center"><span class="grade grade-${s.overallGrade}">${s.overallGrade||'--'}</span></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// ===================== ANALYTICS =====================
+function renderAnalytics() {
+  const classId = getVal('analyticsClassSelect');
+  if (!classId) return;
+  const cls = findClass(classId);
+  const students = computeAllStudents(classId);
+  const subjects = (cls.subjects||[]).filter(Boolean);
+  const active = students.filter(s => s.avg > 0);
+  const classAvg = active.length ? (active.reduce((a,b)=>a+b.avg,0)/active.length).toFixed(1) : '--';
+  const passRate = active.length ? Math.round(active.filter(s=>s.avg>=40).length/active.length*100) : 0;
+  document.getElementById('an-students').textContent = students.length;
+  document.getElementById('an-avg').textContent = classAvg;
+  document.getElementById('an-pass').textContent = passRate+'%';
+  document.getElementById('an-subjects').textContent = subjects.length;
+
+  const extremes = document.getElementById('an-extremes');
+  if (active.length) {
+    const top = active.reduce((a,b)=>a.avg>b.avg?a:b);
+    const bot = active.reduce((a,b)=>a.avg<b.avg?a:b);
+    extremes.innerHTML = `
+      <div class="card" style="margin:0;background:#def7ec;"><div class="card-body" style="padding:12px;">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#065f46;margin-bottom:4px;">🏆 Top Student</div>
+        <div style="font-weight:700;font-size:14px;color:#1e293b;">${top.name}</div>
+        <div style="font-size:13px;color:#065f46;font-weight:700;">${top.avg}% &nbsp; ${top.overallGrade}</div>
+      </div></div>
+      <div class="card" style="margin:0;background:#fde8e8;"><div class="card-body" style="padding:12px;">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#991b1b;margin-bottom:4px;">📉 Needs Support</div>
+        <div style="font-weight:700;font-size:14px;color:#1e293b;">${bot.name}</div>
+        <div style="font-size:13px;color:#991b1b;font-weight:700;">${bot.avg}% &nbsp; ${bot.overallGrade}</div>
+      </div></div>`;
+  } else extremes.innerHTML = '';
+
+  const grades = {A:0,B:0,C:0,D:0,E:0,F:0};
+  active.forEach(s => { if (s.overallGrade) grades[s.overallGrade] = (grades[s.overallGrade]||0)+1; });
+  const colors = {A:'#065f46',B:'#1e40af',C:'#92400e',D:'#9ca3af',E:'#f97316',F:'#991b1b'};
+  const total = active.length || 1;
+  document.getElementById('an-grades').innerHTML = Object.entries(grades).map(([g,n]) => `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+      <div style="width:24px;height:24px;border-radius:6px;background:${colors[g]};color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;">${g}</div>
+      <div style="flex:1;background:#f3f4f6;border-radius:4px;height:14px;overflow:hidden;"><div style="height:100%;width:${Math.round(n/total*100)}%;background:${colors[g]};border-radius:4px;"></div></div>
+      <div style="width:36px;text-align:right;font-size:12px;font-weight:600;color:#4b5563;">${n}</div>
+    </div>`).join('');
+
+  const spEl = document.getElementById('an-subjects-perf');
+  if (!subjects.length) spEl.innerHTML = '<p style="color:#9ca3af;padding:12px;">No subjects set up for this class.</p>';
+  else spEl.innerHTML = subjects.map(subj => {
+    const vals = students.map(s => s.subjects[subj]?s.subjects[subj].total:0).filter(v=>v>0);
+    const avg = vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1) : '--';
+    const pct = avg!=='--' ? Math.round(parseFloat(avg)) : 0;
+    const col = pct>=70?'#065f46':pct>=50?'#92400e':'#991b1b';
+    return `<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:3px;"><span>${subj}</span><span style="color:${col};">${avg}%</span></div>
+      <div style="background:#f3f4f6;border-radius:4px;height:10px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${col};border-radius:4px;"></div></div></div>`;
+  }).join('');
+
+  const rkEl = document.getElementById('an-rankings');
+  if (!active.length) rkEl.innerHTML = '<div class="empty-state"><div class="empty-icon">🏆</div><p>Enter scores to see rankings.</p></div>';
+  else {
+    const ranked = [...students].filter(s=>s.avg>0).sort((a,b)=>a.position-b.position);
+    rkEl.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead><tr style="background:#1e40af;color:white;"><th style="padding:8px;text-align:center;width:40px;">Pos</th><th style="padding:8px;text-align:left;">Name</th><th style="padding:8px;text-align:center;">Avg</th><th style="padding:8px;text-align:center;">Grade</th></tr></thead>
+      <tbody>${ranked.map((s,i)=>`<tr style="border-bottom:1px solid #f3f4f6;${i%2?'background:#f9fafb':''}">
+        <td style="padding:7px;text-align:center;font-weight:700;color:#1e40af;">${s.position}</td>
+        <td style="padding:7px;font-weight:600;">${s.name}</td>
+        <td style="padding:7px;text-align:center;font-weight:700;">${s.avg}%</td>
+        <td style="padding:7px;text-align:center;"><span style="background:#eff6ff;color:#1e40af;padding:2px 8px;border-radius:4px;font-weight:700;">${s.overallGrade}</span></td>
+      </tr>`).join('')}</tbody></table>`;
+  }
+}
+
+// ===================== PRINT / REPORT CARD =====================
+function populatePrintSelect() {
+  const classId = getVal('printClassSelect');
+  const sel = document.getElementById('printStudentSelect');
+  if (!classId) { sel.innerHTML = '<option value="">-- No class selected --</option>'; document.getElementById('reportCardPreview').innerHTML = `<div class="empty-state"><div class="empty-icon">📄</div><p>Add a class first.</p></div>`; return; }
+  const roster = state.students.filter(s => s.classId === classId);
+  sel.innerHTML = '<option value="">-- Choose a student --</option><option value="__all__">🖨️ Print All Students</option>' +
+    roster.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  previewReportCard();
+}
+function previewReportCard() {
+  const classId = getVal('printClassSelect');
+  const val = getVal('printStudentSelect');
+  const preview = document.getElementById('reportCardPreview');
+  if (!classId || !val) { preview.innerHTML = `<div class="empty-state"><div class="empty-icon">📄</div><p>Select a class and student to preview their report card.</p></div>`; return; }
+  if (val === '__all__') {
+    const roster = state.students.filter(s => s.classId === classId);
+    preview.innerHTML = roster.map(s => generateReportCard(classId, s.id)).join('<div class="no-print" style="margin:16px 0;border-top:2px dashed var(--gray-200);text-align:center;font-size:11px;color:#9ca3af;padding-top:6px;">— Next Student —</div>');
+    return;
+  }
+  preview.innerHTML = generateReportCard(classId, val);
+}
+function doPrint(htmlContent) {
+  const win = window.open('', '_blank');
+  if (!win) { showToast('Allow popups then try again', 'error'); return; }
+  const css = `
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; margin: 0; padding: 0; }
+    @page { size: 210mm 297mm; margin: 10mm 12mm; }
+    html { width: 210mm; }
+    body { font-family: Arial, sans-serif; font-size: 10.5px; color: #1e293b; background: white; width: 210mm; max-width: 210mm; }
+    .report-card { border: 1.5px solid #1e40af; border-radius: 8px; overflow: hidden; margin-bottom: 24px; max-width: 210mm; }
+    .rc-top-banner { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #1e40af 100%); color: white; padding: 10px 14px; display: flex; align-items: center; gap: 14px; }
+    .rc-school-crest { width: 44px; height: 44px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+    .rc-school-info h2 { font-size: 14px; font-weight: 700; margin-bottom: 1px; text-transform: uppercase; }
+    .rc-school-info p { font-size: 10px; opacity: 0.85; }
+    .rc-logo-img { width: 44px; height: 44px; object-fit: contain; border-radius: 6px; flex-shrink: 0; }
+    .rc-doc-title { background: #f0f4ff; text-align: center; padding: 5px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #1e40af; border-bottom: 1px solid #dbeafe; }
+    .rc-info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; border-bottom: 1.5px solid #dbeafe; }
+    .rc-info-cell { padding: 5px 10px; border-right: 1px solid #dbeafe; font-size: 10.5px; }
+    .rc-info-cell:last-child { border-right: none; }
+    .info-label { font-size: 9px; font-weight: 700; text-transform: uppercase; color: #6b7280; margin-bottom: 1px; }
+    .info-value { font-weight: 600; color: #1e293b; font-size: 11px; }
+    .rc-summary-bar { display: grid; grid-template-columns: repeat(4,1fr); background: #eff6ff; border-top: 1.5px solid #dbeafe; border-bottom: 1.5px solid #dbeafe; }
+    .rc-summary-cell { text-align: center; padding: 5px 8px; border-right: 1px solid #dbeafe; }
+    .rc-summary-cell:last-child { border-right: none; }
+    .s-label { font-size: 8.5px; font-weight: 700; text-transform: uppercase; color: #6b7280; }
+    .s-value { font-size: 13px; font-weight: 700; color: #1e40af; margin-top: 1px; }
+    .rc-table-wrap { padding: 10px 12px 0; }
+    .rc-table { width: 100%; border-collapse: collapse; font-size: 10.5px; margin-bottom: 10px; }
+    .rc-table thead tr { background: #1e40af; color: white; }
+    .rc-table thead th { padding: 5px 7px; text-align: center; font-size: 9.5px; font-weight: 700; text-transform: uppercase; }
+    .rc-table thead th:first-child { text-align: left; }
+    .rc-table tbody td { padding: 4px 7px; border-bottom: 1px solid #f3f4f6; text-align: center; }
+    .rc-table tbody td:first-child { text-align: left; font-weight: 600; }
+    .rc-table tbody tr:nth-child(even) td { background: #f9fafb; }
+    .rc-table tfoot tr { background: #eff6ff; font-weight: 700; }
+    .rc-table tfoot td { padding: 5px 7px; border-top: 2px solid #1e40af; text-align: center; }
+    .rc-table tfoot td:first-child { text-align: left; }
+    .rc-grade-key { margin: 0 10px 8px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 5px 10px; font-size: 9.5px; color: #6b7280; }
+    .rc-bottom-section { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border-top: 1.5px solid #dbeafe; }
+    .rc-bottom-col { padding: 7px 10px; border-right: 1px solid #dbeafe; }
+    .rc-bottom-col:last-child { border-right: none; }
+    .rc-bottom-title { font-size: 9px; font-weight: 700; text-transform: uppercase; color: #1e40af; margin-bottom: 5px; padding-bottom: 3px; border-bottom: 1px solid #dbeafe; }
+    .trait-row { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px dotted #e5e7eb; font-size: 10px; }
+    .trait-rating { font-weight: 700; color: #1e40af; }
+    .rc-comments { padding: 7px 10px 8px; border-top: 1px solid #dbeafe; }
+    .rc-comment-row { margin-bottom: 6px; }
+    .rc-comment-label { font-size: 9px; font-weight: 700; text-transform: uppercase; color: #6b7280; letter-spacing: 0.5px; margin-bottom: 2px; }
+    .rc-comment-box { border-bottom: 1px solid #d1d5db; min-height: 18px; padding: 1px 0; font-size: 10.5px; color: #374151; font-style: italic; }
+    .rc-signatures { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; border-top: 1.5px solid #dbeafe; }
+    .rc-sig-cell { padding: 7px 10px; border-right: 1px solid #dbeafe; text-align: center; }
+    .rc-sig-cell:last-child { border-right: none; }
+    .rc-sig-line { border-bottom: 1.5px solid #374151; margin: 16px 10px 3px; }
+    .rc-sig-label { font-size: 10px; font-weight: 600; color: #6b7280; }
+    .rc-sig-date { font-size: 9.5px; color: #9ca3af; margin-top: 2px; }
+    .rc-footer-note { background: #1e40af; color: rgba(255,255,255,0.8); text-align: center; font-size: 9px; padding: 5px; font-style: italic; }
+    .rc-headmaster-sig { display: block; max-width: 130px; max-height: 48px; object-fit: contain; margin-bottom: 3px; }
+    .page-break { page-break-after: always; break-after: always; height: 0; overflow: hidden; }
+  `;
+  const tipBanner = `<div id="tip" style="position:fixed;top:0;left:0;right:0;background:#1e40af;color:white;padding:12px 16px;font-family:Arial,sans-serif;font-size:13px;z-index:9999;text-align:center;line-height:1.6;">
+    📄 When the dialog opens: tap <strong>▼ More options</strong> → set <strong>Paper size = A4</strong> → tap <strong>Save / Print</strong>
+    <br><span style="font-size:11px;opacity:0.85;">This banner will disappear when printing starts.</span>
+  </div><div style="height:70px;" class="no-print"></div>`;
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Report Card</title><style>' + css + '.no-print{display:block;}@media print{#tip,.no-print{display:none!important;}}</style></head><body>' + tipBanner + htmlContent + '<scr' + 'ipt>window.onload=function(){setTimeout(function(){window.print();},800);};</scr' + 'ipt></body></html>');
+  win.document.close();
+}
+function printCurrent() {
+  const classId = getVal('printClassSelect');
+  const val = getVal('printStudentSelect');
+  if (!classId || !val) { showToast('Select a class and student first', 'error'); return; }
+  if (val === '__all__') { printAll(); return; }
+  doPrint(generateReportCard(classId, val));
+}
+function printAll() {
+  const classId = getVal('printClassSelect');
+  const roster = state.students.filter(s => s.classId === classId);
+  if (!roster.length) { showToast('No students to print', 'error'); return; }
+  const html = roster.map(s => `<div style="page-break-inside:avoid;break-inside:avoid;">${generateReportCard(classId, s.id)}</div>`)
+    .join('<div style="page-break-after:always;break-after:always;height:0;overflow:hidden;"></div>');
+  doPrint(html);
+}
+function generateReportCard(classId, studentId) {
+  const cls = findClass(classId);
+  const student = findStudent(studentId);
+  const sc = state.scores[studentId] || {};
+  const m = state.meta;
+  const allStudents = computeAllStudents(classId);
+  const computed = allStudents.find(s => s.id === studentId);
+  if (!cls || !student || !computed) return '<div class="report-card"><p style="padding:20px;">Could not generate report card.</p></div>';
+  const grandTotal = computed.grandTotal;
+  const subCount = computed.filledCount;
+  const avg = computed.avg > 0 ? computed.avg.toFixed(1) : 0;
+  const overallGrade = computed.overallGrade;
+  const pos = computed.position || '--';
+  const posDisplay = m.showPosition ? (pos + ' of ' + allStudents.length) : '—';
+
+  const subjData = (cls.subjects||[]).filter(Boolean).map(subj => ({ subj, ...(computed.subjects[subj] || {ca1:0,ca2:0,exam:0,total:0,grade:''}) }));
+  const withScores = allStudents.filter(s => s.avg > 0);
+  const classAvg = withScores.length ? (withScores.reduce((a,b)=>a+b.avg,0)/withScores.length).toFixed(1) : '--';
+
+  const rows = subjData.map((d,i) => {
+    const stats = getSubjectClassStats(classId, d.subj);
+    const ca = (d.ca1||0) + (d.ca2||0);
+    return `<tr>
+      <td>${i+1}. ${d.subj}</td>
+      <td>${ca || '--'}</td>
+      <td>${d.exam || '--'}</td>
+      <td style="font-weight:700;">${d.total || '--'}</td>
+      <td>${stats.highest}</td>
+      <td>${stats.lowest}</td>
+      <td style="font-weight:700;color:#1e40af;">${d.grade||'--'}</td>
+      <td>${d.grade ? gradeRemark(d.grade) : ''}</td>
+    </tr>`;
+  }).join('');
+
+  const affRows = AFFECTIVE.map(t => { const v=parseInt(sc['_aff_'+t]||0); return `<div class="trait-row"><span>${t}</span><span class="trait-rating">${v>0?RATINGS[v].split(' - ')[1]:'--'}</span></div>`; }).join('');
+  const psychRows = PSYCHOMOTOR.map(t => { const v=parseInt(sc['_psy_'+t]||0); return `<div class="trait-row"><span>${t}</span><span class="trait-rating">${v>0?RATINGS[v].split(' - ')[1]:'--'}</span></div>`; }).join('');
+
+  return `
+  <div class="report-card">
+    <div class="rc-top-banner">
+      ${m.logo ? `<img src="${m.logo}" class="rc-logo-img" alt="School Logo">` : `<div class="rc-school-crest">🏫</div>`}
+      <div class="rc-school-info" style="flex:1;"><h2>${m.schoolName||'School Name'}</h2><p>${m.schoolAddress||''}</p>${m.schoolContact?`<p>${m.schoolContact}</p>`:''}</div>
+    </div>
+    <div class="rc-doc-title">Student Academic Report Card</div>
+    <div class="rc-info-grid">
+      <div class="rc-info-cell"><div class="info-label">Student Name</div><div class="info-value">${student.name}</div></div>
+      <div class="rc-info-cell"><div class="info-label">Class</div><div class="info-value">${cls.name||'--'}</div></div>
+      <div class="rc-info-cell"><div class="info-label">Term</div><div class="info-value">${m.term||'--'}</div></div>
+      <div class="rc-info-cell"><div class="info-label">Session</div><div class="info-value">${m.session||'--'}</div></div>
+      <div class="rc-info-cell"><div class="info-label">Class Teacher</div><div class="info-value">${cls.classTeacherName||'--'}</div></div>
+      <div class="rc-info-cell"><div class="info-label">No. of Subjects</div><div class="info-value">${subCount}</div></div>
+      <div class="rc-info-cell"><div class="info-label">Sex</div><div class="info-value">${computed.gender==='F'?'Female':'Male'}</div></div>
+    </div>
+    <div class="rc-summary-bar">
+      <div class="rc-summary-cell"><div class="s-label">Total Score</div><div class="s-value">${grandTotal}</div></div>
+      <div class="rc-summary-cell"><div class="s-label">Average</div><div class="s-value">${avg}%</div></div>
+      <div class="rc-summary-cell"><div class="s-label">Position</div><div class="s-value">${posDisplay}</div></div>
+      <div class="rc-summary-cell"><div class="s-label">Grade</div><div class="s-value">${overallGrade||'--'}</div></div>
+    </div>
+    <div class="rc-table-wrap">
+      <table class="rc-table">
+        <thead><tr><th style="text-align:left;">Subject</th><th>CA</th><th>Exam</th><th>Total</th><th>Highest</th><th>Lowest</th><th>Grade</th><th>Remark</th></tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr><td style="text-align:left;font-weight:700;">CUMULATIVE TOTAL</td><td colspan="2"></td><td style="font-weight:700;">${grandTotal}</td><td colspan="2"></td><td style="font-weight:700;">${overallGrade||'--'}</td><td>${overallGrade?gradeRemark(overallGrade):''}</td></tr></tfoot>
+      </table>
+      <div class="rc-grade-key"><strong>Grade Key:</strong> A = 70–100 (Excellent) &nbsp;·&nbsp; B = 60–69 (Very Good) &nbsp;·&nbsp; C = 50–59 (Good) &nbsp;·&nbsp; D = 45–49 (Pass) &nbsp;·&nbsp; E = 40–44 (Pass Low) &nbsp;·&nbsp; F = Below 40 (Fail) &nbsp;|&nbsp; <strong>Class Average:</strong> ${classAvg}%</div>
+    </div>
+    <div style="background:#f0fdf4;padding:7px 12px;border-radius:6px;margin:0 0 8px 0;font-size:11px;display:flex;gap:20px;flex-wrap:wrap;">
+      <span><strong style="color:#065f46;">Attendance:</strong></span>
+      <span>Times School Opened: <strong>${sc._opened||'--'}</strong></span>
+      <span>Times Present: <strong>${sc._present||'--'}</strong></span>
+      <span>Times Absent: <strong>${sc._absent||'--'}</strong></span>
+    </div>
+    <div class="rc-bottom-section">
+      <div class="rc-bottom-col"><div class="rc-bottom-title">Affective / Behavioural Report</div>${affRows}</div>
+      <div class="rc-bottom-col"><div class="rc-bottom-title">Psychomotor Report</div>${psychRows}</div>
+    </div>
+    <div class="rc-comments">
+      <div class="rc-comment-row"><div class="rc-comment-label">Class Teacher's Comment</div><div class="rc-comment-box">${sc._teacher_comment||''}</div></div>
+      <div class="rc-comment-row"><div class="rc-comment-label">Principal's Comment</div><div class="rc-comment-box">${sc._principal_comment||''}</div></div>
+    </div>
+    <div class="rc-signatures" style="grid-template-columns:1fr 1fr 1fr;">
+      <div class="rc-sig-cell">
+        <div style="min-height:48px;display:flex;align-items:flex-end;"><div style="font-size:11px;font-weight:600;color:#374151;">${cls.classTeacherName||''}</div></div>
+        <div class="rc-sig-line"></div><div class="rc-sig-label">Class Teacher</div>
+      </div>
+      <div class="rc-sig-cell">
+        <div style="min-height:48px;display:flex;align-items:flex-end;">${m.signature?`<img src="${m.signature}" class="rc-headmaster-sig" alt="Signature">`:`<div style="height:40px;"></div>`}</div>
+        <div class="rc-sig-line"></div><div class="rc-sig-label">Head Teacher / Principal</div><div class="rc-sig-date">${m.principalName||''}</div>
+      </div>
+      <div class="rc-sig-cell" style="position:relative;">
+        ${m.stamp?`<div style="position:absolute;top:4px;right:10px;opacity:0.7;"><img src="${m.stamp}" style="width:72px;height:72px;object-fit:contain;" alt="Stamp"></div>`:''}
+        <div style="font-size:10px;color:#6b7280;margin-bottom:4px;margin-top:8px;">Next Term Begins</div>
+        <div style="font-weight:700;font-size:12px;">${m.resumption||'To be announced'}</div>
+        <div style="font-size:9px;color:#9ca3af;margin-top:28px;font-style:italic;">Any alteration renders this document invalid.</div>
+      </div>
+    </div>
+    <div class="rc-footer-note">${m.schoolName||'School'} · ${m.term||''} · ${m.session||''} · Generated by EduResult System</div>
+  </div>`;
+}
+
+// ===================== IMAGE UPLOAD =====================
+function handleImageUpload(type, input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 2*1024*1024) { showToast('Image too large. Please use under 2MB.', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const base64 = e.target.result;
+    saveImage(type, base64);
+    loadImagePreview(type, base64);
+    showToast(type.charAt(0).toUpperCase()+type.slice(1)+' uploaded ✓', 'success');
+  };
+  reader.readAsDataURL(file);
+}
+function loadImagePreview(type, src) {
+  const preview = document.getElementById(type==='logo'?'logoPreview':type==='signature'?'sigPreview':'stampPreview');
+  const clearBtn = document.getElementById(type==='logo'?'logoClear':type==='signature'?'sigClear':'stampClear');
+  const box = document.getElementById(type==='logo'?'logoBox':type==='signature'?'sigBox':'stampBox');
+  if (!preview) return;
+  if (src) {
+    preview.src = src; preview.classList.add('loaded');
+    if (clearBtn) clearBtn.classList.add('visible');
+    const emoji = box.querySelector('.img-upload-emoji'); const label = box.querySelector('.upload-label'); const hint = box.querySelector('.upload-hint');
+    if (emoji) emoji.style.display='none'; if (label) label.style.display='none'; if (hint) hint.style.display='none';
+  } else {
+    preview.src=''; preview.classList.remove('loaded');
+    if (clearBtn) clearBtn.classList.remove('visible');
+    const emoji = box.querySelector('.img-upload-emoji'); const label = box.querySelector('.upload-label'); const hint = box.querySelector('.upload-hint');
+    if (emoji) emoji.style.display=''; if (label) label.style.display=''; if (hint) hint.style.display='';
+  }
+}
+function clearImage(e, type) {
+  e.preventDefault(); e.stopPropagation();
+  saveImage(type, '');
+  loadImagePreview(type, '');
+  showToast(type+' removed', 'info');
+}
+
+// ===================== TOAST =====================
+function showToast(msg, type='') {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(()=>el.classList.add('show'), 10);
+  setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=>el.remove(), 400); }, 2800);
+}
+
+// ===================== INIT =====================
+loadState();
+initApp();
+
+// Register service worker for offline + installable app support
+// (skipped on file:// since service workers require http/https)
+if (location.protocol !== 'file:' && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
