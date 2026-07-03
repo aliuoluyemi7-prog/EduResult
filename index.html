@@ -20,6 +20,15 @@
     var ico = document.createElement("link");
     ico.rel = "apple-touch-icon"; ico.href = "icon-192.png";
     document.head.appendChild(ico);
+
+    // Register service worker for offline caching — safe no-op if sw.js is missing/fails
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function() {
+        navigator.serviceWorker.register("sw.js").catch(function(err) {
+          console.warn("Service worker registration failed:", err);
+        });
+      });
+    }
   }
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1080,6 +1089,17 @@ tbody tr { transition: background 0.1s; }
     </div>
   </div>
   <div class="card">
+    <div class="card-header"><div class="card-title"><div class="icon">🔁</div> Send / Receive Class Data</div></div>
+    <div class="card-body">
+      <p style="font-size:11.5px;color:var(--gray-400);margin:0 0 12px;">Export the selected class to share with another phone (WhatsApp, email, etc). Import a received file to add it here.</p>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" style="flex:1;" onclick="exportClass()">📤 Export Class</button>
+        <button class="btn btn-outline" style="flex:1;" onclick="triggerImportClass()">📥 Import File</button>
+      </div>
+      <input type="file" id="importClassFile" accept="application/json,.json" style="display:none;" onchange="importClassFile(this)">
+    </div>
+  </div>
+  <div class="card">
     <div class="card-header"><div class="card-title"><div class="icon">📝</div> Tap a student to compile</div></div>
     <div class="card-body" style="padding:0;" id="compileListWrap"></div>
   </div>
@@ -1777,6 +1797,113 @@ function closeCompileDrawer() {
   document.body.style.overflow = '';
   currentCompileStudentId = null;
 }
+// ===================== EXPORT / IMPORT (CLASS-LEVEL, DEVICE-TO-DEVICE) =====================
+function exportClass() {
+  const classId = getVal('compileClassSelect');
+  const cls = findClass(classId);
+  if (!cls) { showToast('Select a class first', 'error'); return; }
+  const students = state.students.filter(s => s.classId === classId);
+  if (students.length === 0) { showToast('No students in this class yet', 'error'); return; }
+
+  const scores = {};
+  students.forEach(s => { scores[s.id] = state.scores[s.id] || {}; });
+
+  const payload = {
+    exportType: 'eduresult_class',
+    exportVersion: 1,
+    exportedAt: new Date().toISOString(),
+    class: {
+      name: cls.name,
+      subjects: cls.subjects || [],
+      classTeacherName: cls.classTeacherName || ''
+    },
+    students: students.map(s => ({ id: s.id, name: s.name, gender: s.gender || '' })),
+    scores: scores
+  };
+
+  const filename = (cls.name || 'Class') + ' Result.json';
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('📤 Exported ' + filename, 'success');
+}
+
+function triggerImportClass() {
+  document.getElementById('importClassFile').click();
+}
+
+function importClassFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.exportType !== 'eduresult_class' || !data.class || !data.students) {
+        showToast('Not a valid EduResult class file', 'error');
+        input.value = '';
+        return;
+      }
+      mergeImportedClass(data);
+    } catch (err) {
+      showToast('Could not read file — invalid JSON', 'error');
+    }
+    input.value = ''; // allow re-selecting the same file later
+  };
+  reader.readAsText(file);
+}
+
+function mergeImportedClass(data) {
+  const importName = (data.class.name || '').trim();
+  if (!importName) { showToast('Import file has no class name', 'error'); return; }
+
+  let cls = state.classes.find(c => (c.name || '').trim().toLowerCase() === importName.toLowerCase());
+  if (!cls) {
+    cls = { id: generateId(), name: importName, subjects: data.class.subjects || [], classTeacherName: data.class.classTeacherName || '' };
+    state.classes.push(cls);
+  } else {
+    const subjSet = new Set([...(cls.subjects || []), ...(data.class.subjects || [])]);
+    cls.subjects = [...subjSet].filter(Boolean);
+    if (!cls.classTeacherName && data.class.classTeacherName) cls.classTeacherName = data.class.classTeacherName;
+  }
+
+  // Match imported students to existing ones by name (case-insensitive) to avoid duplicates
+  const idMap = {};
+  let addedStudents = 0, matchedStudents = 0;
+  (data.students || []).forEach(importedStudent => {
+    const nameNorm = (importedStudent.name || '').trim().toLowerCase();
+    let localStudent = state.students.find(s => s.classId === cls.id && (s.name || '').trim().toLowerCase() === nameNorm);
+    if (!localStudent) {
+      localStudent = { id: generateId(), name: importedStudent.name, gender: importedStudent.gender || '', classId: cls.id };
+      state.students.push(localStudent);
+      addedStudents++;
+    } else {
+      matchedStudents++;
+    }
+    idMap[importedStudent.id] = localStudent.id;
+  });
+
+  // Merge scores at key-level — fills in / overwrites imported keys, keeps any local keys the import doesn't mention
+  Object.keys(data.scores || {}).forEach(importedStudentId => {
+    const localId = idMap[importedStudentId];
+    if (!localId) return;
+    const incoming = data.scores[importedStudentId] || {};
+    const existing = state.scores[localId] || {};
+    state.scores[localId] = Object.assign({}, existing, incoming);
+  });
+
+  saveState();
+  refreshAllClassDropdowns();
+  renderClassList();
+  renderStudentList();
+  renderCompileList();
+  renderResults();
+  showToast(`✅ Imported ${cls.name}: ${addedStudents} new, ${matchedStudents} matched`, 'success');
+}
+
 function handleCompileDrawerOverlayClick(e) {
   if (e.target === document.getElementById('compileDrawer')) closeCompileDrawer();
 }
@@ -2159,14 +2286,6 @@ function showToast(msg, type='') {
 // ===================== INIT =====================
 loadState();
 initApp();
-
-// Register service worker for offline + installable app support
-// (skipped on file:// since service workers require http/https)
-if (location.protocol !== 'file:' && 'serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
-  });
-}
 </script>
 </body>
 </html>
