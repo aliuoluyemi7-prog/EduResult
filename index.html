@@ -1139,7 +1139,18 @@ tbody tr { transition: background 0.1s; }
   <div class="card">
     <div class="card-header"><div class="card-title"><div class="icon">👥</div> Select Class</div></div>
     <div class="card-body">
-      <div class="form-group" style="margin:0;"><select id="studClassSelect" onchange="renderStudentList()"></select></div>
+      <div class="form-group" style="margin:0;"><select id="studClassSelect" onchange="renderStudentList(); renderSubjectManager();"></select></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title"><div class="icon">📚</div> Subjects for this Class</div></div>
+    <div class="card-body">
+      <p style="font-size:11.5px;color:var(--gray-400);margin:0 0 10px;">Add the subjects taught in this class. These are what you'll enter scores for in Compile.</p>
+      <div id="subjectManageWrap" style="margin-bottom:10px;"></div>
+      <div style="display:flex;gap:6px;">
+        <input type="text" id="newSubjectInput" placeholder="e.g. Mathematics" style="flex:1;" onkeydown="if(event.key==='Enter')addSubjectToCurrentClass()">
+        <button class="btn btn-outline" onclick="addSubjectToCurrentClass()">+ Add</button>
+      </div>
     </div>
   </div>
   <div class="card">
@@ -1404,6 +1415,7 @@ function initApp() {
   refreshAllClassDropdowns();
   renderClassList();
   renderStudentList();
+  renderSubjectManager();
   renderCompileList();
   renderResults();
   populatePrintSelect();
@@ -1533,6 +1545,7 @@ function switchAdminTab(tab) {
     document.getElementById('panel-a-' + t).classList.toggle('active', t === tab);
     document.getElementById('tab-a-' + t).classList.toggle('active', t === tab);
   });
+  if (tab === 'students') renderSubjectManager();
   if (tab === 'compile') renderCompileList();
   if (tab === 'results') renderResults();
   if (tab === 'print') populatePrintSelect();
@@ -1712,6 +1725,47 @@ function refreshAllClassDropdowns() {
     if (sorted.some(c => c.id === prev)) sel.value = prev;
   });
   if (currentRole === 'teacher') lockClassSelectsToTeacher();
+}
+
+// ===================== SUBJECTS (teacher-facing, from Students tab) =====================
+function renderSubjectManager() {
+  const wrap = document.getElementById('subjectManageWrap');
+  if (!wrap) return;
+  const classId = currentStudClassId();
+  const cls = findClass(classId);
+  if (!cls) { wrap.innerHTML = '<span style="font-size:12px;color:var(--gray-400);">Select a class first.</span>'; return; }
+  wrap.innerHTML = cls.subjects.length
+    ? cls.subjects.map(s => `<span class="subj-mini-chip">${s} <span style="cursor:pointer;color:#fca5a5;" onclick="removeSubjectFromCurrentClass('${s.replace(/'/g,"\\'")}')">×</span></span>`).join('')
+    : '<span style="font-size:12px;color:var(--gray-400);">No subjects yet — add your first below.</span>';
+}
+function addSubjectToCurrentClass() {
+  const classId = currentStudClassId();
+  const cls = findClass(classId);
+  if (!cls) { showToast('Select a class first', 'error'); return; }
+  const input = document.getElementById('newSubjectInput');
+  const name = input.value.trim();
+  if (!name) return;
+  if (cls.subjects.some(s => s.toLowerCase() === name.toLowerCase())) {
+    showToast('Subject already added', 'error'); return;
+  }
+  cls.subjects.push(name);
+  saveState();
+  input.value = '';
+  renderSubjectManager();
+  renderCompileList();
+  renderClassList();
+  showToast('✅ ' + name + ' added', 'success');
+}
+function removeSubjectFromCurrentClass(subj) {
+  const classId = currentStudClassId();
+  const cls = findClass(classId);
+  if (!cls) return;
+  if (!confirm('Remove "' + subj + '"? Any scores already entered for it will be kept but hidden.')) return;
+  cls.subjects = cls.subjects.filter(s => s !== subj);
+  saveState();
+  renderSubjectManager();
+  renderCompileList();
+  renderClassList();
 }
 
 // ===================== STUDENTS =====================
