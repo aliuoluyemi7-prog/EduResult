@@ -1129,6 +1129,11 @@ tbody tr { transition: background 0.1s; }
     <div class="card-body">
       <p style="font-size:11.5px;color:var(--gray-400);margin:0 0 12px;">Tap a class to activate it for this school — from Creche to SSS3. Tap an active one to remove it (its students &amp; results go too).</p>
       <div class="level-chip-grid" id="levelChipGrid"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <input type="text" id="customClassInput" placeholder="e.g. JSS 1A (for split classes/arms)" style="flex:1;" onkeydown="if(event.key==='Enter')addCustomClass()">
+        <button class="btn btn-outline" onclick="addCustomClass()">+ Add Class</button>
+      </div>
+      <p style="font-size:11px;color:var(--gray-400);margin:8px 0 0;">Use this to split a level into arms — e.g. type "JSS 1A", then "JSS 1B", then "JSS 1C". Each becomes its own class with its own teacher login (the class name is the password), its own students, subjects and results.</p>
     </div>
   </div>
   <div id="classListWrap"></div>
@@ -1344,8 +1349,26 @@ const CLASS_LEVELS = [
   'Primary 1', 'Primary 2', 'Primary 3', 'Primary 4', 'Primary 5', 'Primary 6',
   'JSS 1', 'JSS 2', 'JSS 3', 'SSS 1', 'SSS 2', 'SSS 3'
 ];
+// Finds the preset level a class name belongs to, so custom arms
+// like "JSS 1A" / "JSS 1B" still sort correctly next to "JSS 1".
+function getBaseLevel(name) {
+  let best = null;
+  CLASS_LEVELS.forEach(lvl => {
+    if (name.toLowerCase().startsWith(lvl.toLowerCase())) {
+      if (!best || lvl.length > best.length) best = lvl;
+    }
+  });
+  return best;
+}
 function sortClassesByLevel(arr) {
-  return [...arr].sort((a, b) => CLASS_LEVELS.indexOf(a.name) - CLASS_LEVELS.indexOf(b.name));
+  return [...arr].sort((a, b) => {
+    const ia = CLASS_LEVELS.indexOf(getBaseLevel(a.name));
+    const ib = CLASS_LEVELS.indexOf(getBaseLevel(b.name));
+    const ra = ia === -1 ? 999 : ia;
+    const rb = ib === -1 ? 999 : ib;
+    if (ra !== rb) return ra - rb;
+    return a.name.localeCompare(b.name);
+  });
 }
 
 const AFFECTIVE = ['Punctuality','Attentiveness','Neatness','Honesty','Respect','Leadership','Co-operation','Diligence'];
@@ -1630,6 +1653,21 @@ function toggleClassLevel(name) {
   renderClassList();
   refreshAllClassDropdowns();
   showToast('✅ ' + name + ' activated', 'success');
+}
+function addCustomClass() {
+  const input = document.getElementById('customClassInput');
+  const name = input.value.trim();
+  if (!name) return;
+  if (state.classes.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+    showToast('A class with that name already exists', 'error');
+    return;
+  }
+  state.classes.push({ id: generateId(), name, subjects: [], classTeacherName: '' });
+  saveState();
+  input.value = '';
+  renderClassList();
+  refreshAllClassDropdowns();
+  showToast('✅ ' + name + ' added', 'success');
 }
 function removeClass(id) {
   const cls = findClass(id);
