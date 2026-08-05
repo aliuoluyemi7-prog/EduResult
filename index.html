@@ -974,14 +974,9 @@ tbody tr { transition: background 0.1s; }
     <h1>EduResult</h1>
     <p class="sub" id="loginSchoolNameLabel">School</p>
 
-    <div class="role-toggle">
-      <button type="button" class="role-btn active" id="roleBtnTeacher" onclick="setLoginRole('teacher')">👩‍🏫 Teacher</button>
-      <button type="button" class="role-btn" id="roleBtnAdmin" onclick="setLoginRole('admin')">🔑 Admin</button>
-    </div>
-
-    <input type="text" id="loginPasswordInput" placeholder="Enter your class name" autocomplete="off"
+    <input type="text" id="loginPasswordInput" placeholder="Enter your class name or admin password" autocomplete="off"
       onkeydown="if(event.key==='Enter')attemptLogin()">
-    <div class="login-hint" id="loginHint">e.g. JSS 1 — this is your password</div>
+    <div class="login-hint" id="loginHint">Teachers: enter your class name. Admin: enter admin password.</div>
     <div class="login-error" id="loginError"></div>
     <button class="btn btn-primary btn-full" style="padding:14px;" onclick="attemptLogin()">Continue →</button>
   </div>
@@ -1450,43 +1445,24 @@ function initApp() {
 // ===================== LOGIN / ROLES =====================
 let currentRole = null;       // 'admin' | 'teacher'
 let teacherClassId = null;
-let loginRoleSelected = 'teacher';
-
-function setLoginRole(role) {
-  loginRoleSelected = role;
-  document.getElementById('roleBtnTeacher').classList.toggle('active', role === 'teacher');
-  document.getElementById('roleBtnAdmin').classList.toggle('active', role === 'admin');
-  const input = document.getElementById('loginPasswordInput');
-  const hint = document.getElementById('loginHint');
-  input.value = '';
-  input.type = role === 'admin' ? 'password' : 'text';
-  input.placeholder = role === 'admin' ? 'Enter admin password' : 'Enter your class name';
-  hint.textContent = role === 'admin' ? 'Set/changed in Setup by the school admin' : 'e.g. JSS 1 — this is your password';
-  document.getElementById('loginError').textContent = '';
-  input.focus();
-}
-
 function attemptLogin() {
   const val = getVal('loginPasswordInput').trim();
   const errEl = document.getElementById('loginError');
-  if (!val) { errEl.textContent = 'Please enter your password'; return; }
+  if (!val) { errEl.textContent = 'Please enter your class name or admin password'; return; }
 
-  if (loginRoleSelected === 'admin') {
-    const correct = state.meta.adminPassword || 'admin2026';
-    if (val === correct) {
-      loginAsAdmin();
-    } else {
-      errEl.textContent = 'Incorrect admin password';
-    }
+  // Check admin password first
+  const correctAdmin = state.meta.adminPassword || 'admin2026';
+  if (val === correctAdmin) {
+    loginAsAdmin();
     return;
   }
 
-  // Teacher: match against active class names, case-insensitive
+  // Otherwise match against active class names, case-insensitive
   const cls = state.classes.find(c => (c.name || '').trim().toLowerCase() === val.toLowerCase());
   if (cls) {
     loginAsTeacher(cls);
   } else {
-    errEl.textContent = 'No active class matches that name. Ask admin to activate your class.';
+    errEl.textContent = 'That doesn\'t match a class name or the admin password. Ask admin to check.';
   }
 }
 
@@ -1559,7 +1535,6 @@ function logoutApp() {
   document.getElementById('loginError').textContent = '';
   document.getElementById('screen-adminApp').style.display = 'none';
   document.getElementById('screen-login').style.display = 'flex';
-  setLoginRole('teacher');
 }
 
 // ===================== TABS =====================
