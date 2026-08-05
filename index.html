@@ -1125,10 +1125,10 @@ tbody tr { transition: background 0.1s; }
       <p style="font-size:11.5px;color:var(--gray-400);margin:0 0 12px;">Tap a class to activate it for this school — from Creche to SSS3. Tap an active one to remove it (its students &amp; results go too).</p>
       <div class="level-chip-grid" id="levelChipGrid"></div>
       <div style="display:flex;gap:8px;margin-top:12px;">
-        <input type="text" id="customClassInput" placeholder="e.g. JSS 1A (for split classes/arms)" style="flex:1;" onkeydown="if(event.key==='Enter')addCustomClass()">
+        <input type="text" id="customClassInput" placeholder="Type any class name (e.g. your school's own arm or level)" style="flex:1;" onkeydown="if(event.key==='Enter')addCustomClass()">
         <button class="btn btn-outline" onclick="addCustomClass()">+ Add Class</button>
       </div>
-      <p style="font-size:11px;color:var(--gray-400);margin:8px 0 0;">Use this to split a level into arms — e.g. type "JSS 1A", then "JSS 1B", then "JSS 1C". Each becomes its own class with its own teacher login (the class name is the password), its own students, subjects and results.</p>
+      <p style="font-size:11px;color:var(--gray-400);margin:8px 0 0;">Use this to add any class or split a level into arms — type whatever name your school uses. Each becomes its own class with its own teacher login (the class name is the password), its own students, subjects and results.</p>
     </div>
   </div>
   <div id="classListWrap"></div>
