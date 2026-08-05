@@ -1461,6 +1461,20 @@ function attemptLogin() {
   const cls = state.classes.find(c => (c.name || '').trim().toLowerCase() === val.toLowerCase());
   if (cls) {
     loginAsTeacher(cls);
+    return;
+  }
+
+  // No exact match — check if this looks like a base level with only arm(s) set up,
+  // e.g. someone typed "JSS 1" but only "JSS 1A" exists as a class.
+  const valLower = val.toLowerCase();
+  const nearMatches = state.classes.filter(c => {
+    const name = (c.name || '').trim().toLowerCase();
+    return name.startsWith(valLower) || valLower.startsWith(name);
+  });
+
+  if (nearMatches.length) {
+    const names = nearMatches.map(c => c.name).join(', ');
+    errEl.textContent = 'No class named exactly "' + val + '" exists. Did you mean: ' + names + '? Ask admin to check the exact class name.';
   } else {
     errEl.textContent = 'That doesn\'t match a class name or the admin password. Ask admin to check.';
   }
