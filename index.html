@@ -964,6 +964,13 @@ tbody tr { transition: background 0.1s; }
 .level-chip { padding: 9px 14px; border-radius: 20px; border: 1.5px solid var(--gray-200); background: white; font-size: 13px; font-weight: 600; color: var(--gray-600); cursor: pointer; transition: all 0.12s; user-select: none; }
 .level-chip:active { transform: scale(0.96); }
 .level-chip.active { background: var(--blue); border-color: var(--blue); color: white; }
+/* Score entry: subject on its own line, 5 equal columns incl. Pos */
+.score-entry-row, .score-entry-headers { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.score-entry-row .score-subj-name { grid-column: 1 / -1; }
+.score-entry-row .score-col-input { width: 100%; min-width: 0; }
+.score-entry-row .score-total-badge { min-width: 0; width: 100%; }
+.score-pos-cell { display: flex; align-items: center; justify-content: center; height: 28px; font-size: 13px; font-weight: 700; color: var(--blue); background: var(--blue-light); border-radius: 6px; }
+.score-entry-headers span:first-child { text-align: center; }
 </style>
 </head>
 <body>
@@ -1294,7 +1301,7 @@ tbody tr { transition: background 0.1s; }
       <div class="drawer-section">
         <div class="drawer-section-title">✏️ Subject Scores — CA1, CA2 &amp; Exam, all entered here</div>
         <div class="score-entry-headers" id="compileScoreHeaders">
-          <span>Subject</span><span>CA1</span><span>CA2</span><span>Exam</span><span>Total</span>
+          <span>CA1</span><span>CA2</span><span>Exam</span><span>Total</span><span>Pos</span>
         </div>
         <div class="score-entry-grid" id="compileScoreGrid"></div>
       </div>
@@ -2109,11 +2116,12 @@ function openCompileDrawer(studentId) {
     const tc = total>0 ? (total>=70?'high':total>=50?'mid':'low') : '';
     const key = subj.replace(/[^a-zA-Z0-9]/g,'_');
     return `<div class="score-entry-row" id="cdrow-${key}">
-      <div class="score-subj-name">${subj}${(_me && _me.subjects[subj] && _me.subjects[subj].position) ? `<div style="font-size:10.5px;font-weight:700;color:var(--blue);margin-top:2px;">Pos: ${ordinal(_me.subjects[subj].position)}</div>` : ''}</div>
+      <div class="score-subj-name">${subj}</div>
       <input type="number" class="score-col-input" min="0" max="${state.meta.ca1Max||20}" value="${ca1}" data-type="ca1" data-key="${key}" oninput="compileScoreInput(this)">
       <input type="number" class="score-col-input" min="0" max="${state.meta.ca2Max||20}" value="${ca2}" data-type="ca2" data-key="${key}" oninput="compileScoreInput(this)">
       <input type="number" class="score-col-input" min="0" max="${state.meta.examMax||60}" value="${exam}" data-type="exam" data-key="${key}" oninput="compileScoreInput(this)">
       <span class="score-total-badge ${tc}" id="cdtotal-${key}">${total||'--'}</span>
+      <span class="score-pos-cell" id="cdpos-${key}">${(_me && _me.subjects[subj] && _me.subjects[subj].position) ? ordinal(_me.subjects[subj].position) : '--'}</span>
     </div>`;
   }).join('');
 
@@ -2606,6 +2614,10 @@ function generateReportCard(classId, studentId) {
   const subjData = (cls.subjects||[]).filter(Boolean).map(subj => ({ subj, ...(computed.subjects[subj] || {ca1:0,ca2:0,exam:0,total:0,grade:''}) }));
   const withScores = allStudents.filter(s => s.avg > 0);
   const classAvg = withScores.length ? (withScores.reduce((a,b)=>a+b.avg,0)/withScores.length).toFixed(1) : '--';
+  const maxAvg = withScores.length ? Math.max(...withScores.map(x=>x.avg)).toFixed(1) : '--';
+  const minAvg = withScores.length ? Math.min(...withScores.map(x=>x.avg)).toFixed(1) : '--';
+  const gradeCount = {A:0,B:0,C:0,D:0,E:0,F:0};
+  subjData.forEach(d => { if (d.grade && gradeCount[d.grade] !== undefined) gradeCount[d.grade]++; });
 
   const showSubjPos = m.showSubjectPosition !== false;
   const rows = subjData.map((d,i) => {
@@ -2642,9 +2654,12 @@ function generateReportCard(classId, studentId) {
       <div class="rc-info-cell"><div class="info-label">Class Teacher</div><div class="info-value">${cls.classTeacherName||'--'}</div></div>
       <div class="rc-info-cell"><div class="info-label">No. of Subjects</div><div class="info-value">${subCount}</div></div>
       <div class="rc-info-cell"><div class="info-label">Sex</div><div class="info-value">${computed.gender==='F'?'Female':'Male'}</div></div>
+      <div class="rc-info-cell"><div class="info-label">Class Average</div><div class="info-value">${classAvg}${classAvg!=='--'?'%':''}</div></div>
+      <div class="rc-info-cell"><div class="info-label">Highest Avg in Class</div><div class="info-value">${maxAvg}${maxAvg!=='--'?'%':''}</div></div>
+      <div class="rc-info-cell"><div class="info-label">Lowest Avg in Class</div><div class="info-value">${minAvg}${minAvg!=='--'?'%':''}</div></div>
     </div>
     <div class="rc-summary-bar">
-      <div class="rc-summary-cell"><div class="s-label">Total Score</div><div class="s-value">${grandTotal}</div></div>
+      <div class="rc-summary-cell"><div class="s-label">Marks Obtained</div><div class="s-value">${grandTotal} / ${subCount*100}</div></div>
       <div class="rc-summary-cell"><div class="s-label">Average</div><div class="s-value">${avg}%</div></div>
       <div class="rc-summary-cell"><div class="s-label">Position</div><div class="s-value">${posDisplay}</div></div>
       <div class="rc-summary-cell"><div class="s-label">Grade</div><div class="s-value">${overallGrade||'--'}</div></div>
@@ -2655,7 +2670,14 @@ function generateReportCard(classId, studentId) {
         <tbody>${rows}</tbody>
         <tfoot><tr><td style="text-align:left;font-weight:700;">CUMULATIVE TOTAL</td><td colspan="2"></td><td style="font-weight:700;">${grandTotal}</td><td colspan="2"></td>${showSubjPos ? `<td style="font-weight:700;">${m.showPosition ? ordinal(computed.position) : ''}</td>` : ''}<td style="font-weight:700;">${overallGrade||'--'}</td><td>${overallGrade?gradeRemark(overallGrade):''}</td></tr></tfoot>
       </table>
-      <div class="rc-grade-key"><strong>Grade Key:</strong> A = 70–100 (Excellent) &nbsp;·&nbsp; B = 60–69 (Very Good) &nbsp;·&nbsp; C = 50–59 (Good) &nbsp;·&nbsp; D = 45–49 (Pass) &nbsp;·&nbsp; E = 40–44 (Pass Low) &nbsp;·&nbsp; F = Below 40 (Fail) &nbsp;|&nbsp; <strong>Class Average:</strong> ${classAvg}%</div>
+      <div class="rc-grade-key">
+        <table style="width:100%;border-collapse:collapse;text-align:center;font-size:9.5px;">
+          <tr style="font-weight:700;color:#1e40af;"><td style="text-align:left;">Grade</td><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>F</td></tr>
+          <tr><td style="text-align:left;">Range</td><td>70–100</td><td>60–69</td><td>50–59</td><td>45–49</td><td>40–44</td><td>0–39</td></tr>
+          <tr><td style="text-align:left;">Remark</td><td>Excellent</td><td>Very Good</td><td>Good</td><td>Pass</td><td>Pass (Low)</td><td>Fail</td></tr>
+          <tr style="font-weight:700;color:#1e293b;"><td style="text-align:left;">No. of Subjects</td>${['A','B','C','D','E','F'].map(g=>`<td>${gradeCount[g]}</td>`).join('')}</tr>
+        </table>
+      </div>
     </div>
     <div style="background:#f0fdf4;padding:7px 12px;border-radius:6px;margin:0 0 8px 0;font-size:11px;display:flex;gap:20px;flex-wrap:wrap;">
       <span><strong style="color:#065f46;">Attendance:</strong></span>
