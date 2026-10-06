@@ -2083,7 +2083,16 @@ function openCompileDrawer(studentId) {
   const st = findStudent(studentId);
   const cls = findClass(currentCompileClassId);
   const sc = state.scores[studentId] || {};
-  document.getElementById('compileStudentName').textContent = st.name;
+  const _all = computeAllStudents(currentCompileClassId);
+  const _me = _all.find(x => x.id === studentId);
+  const _nameEl = document.getElementById('compileStudentName');
+  _nameEl.textContent = st.name;
+  if (_me && _me.avg > 0) {
+    const _sp = document.createElement('div');
+    _sp.style.cssText = 'font-size:12px;font-weight:600;color:var(--blue);margin-top:2px;';
+    _sp.textContent = 'Overall position: ' + ordinal(_me.position) + ' of ' + _all.length;
+    _nameEl.appendChild(_sp);
+  }
   document.getElementById('cDrawerOpened').value = sc._opened || '';
   document.getElementById('cDrawerPresent').value = sc._present || '';
   updateCompileAbsentCalc();
@@ -2100,7 +2109,7 @@ function openCompileDrawer(studentId) {
     const tc = total>0 ? (total>=70?'high':total>=50?'mid':'low') : '';
     const key = subj.replace(/[^a-zA-Z0-9]/g,'_');
     return `<div class="score-entry-row" id="cdrow-${key}">
-      <div class="score-subj-name">${subj}</div>
+      <div class="score-subj-name">${subj}${(_me && _me.subjects[subj] && _me.subjects[subj].position) ? `<div style="font-size:10.5px;font-weight:700;color:var(--blue);margin-top:2px;">Pos: ${ordinal(_me.subjects[subj].position)}</div>` : ''}</div>
       <input type="number" class="score-col-input" min="0" max="${state.meta.ca1Max||20}" value="${ca1}" data-type="ca1" data-key="${key}" oninput="compileScoreInput(this)">
       <input type="number" class="score-col-input" min="0" max="${state.meta.ca2Max||20}" value="${ca2}" data-type="ca2" data-key="${key}" oninput="compileScoreInput(this)">
       <input type="number" class="score-col-input" min="0" max="${state.meta.examMax||60}" value="${exam}" data-type="exam" data-key="${key}" oninput="compileScoreInput(this)">
